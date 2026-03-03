@@ -1,0 +1,32 @@
+Day 2 re-audit request.
+
+Please audit against:
+- `pillars-v2.md`
+- `readiness-checklist.md`
+- `milestone-acceptance-matrix.md`
+
+Primary evidence artifacts:
+- `day2-roll-system-test-checklist.md` (now fully executed and filled)
+- `odds-and-pity-spec.md`
+- `data-schema-v1.md`
+- `milestone-acceptance-matrix.md` (Day 2 section)
+
+Evaluate Day 2 Must Pass:
+1) No client-trusted roll or pity path
+2) Pity guarantees trigger at exact thresholds
+3) Roll outcomes logged with sufficient audit fields
+4) Disclosure text matches configured probabilities/thresholds
+5) Critical economy write failure in harness <= 0.3%
+
+Return format:
+1. Status (Green/Yellow/Red + confidence)
+2. Rule adherence (Yes/No + violations)
+3. Day 2 Must Pass table (requirement -> evidence -> PASS/FAIL)
+4. Findings by severity
+5. Required actions before PASS (if any)
+6. Recommendation (GO / GO WITH RISKS / NO-GO)
+7. Remaining blockers
+
+If all five criteria pass with traceable execution evidence, explicitly state:
+"Day 2 can be marked PASS."
+
