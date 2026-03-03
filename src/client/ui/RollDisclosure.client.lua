@@ -23,19 +23,20 @@ function RollDisclosure.CreateDisclosureGui()
 	gui.Name = "RollDisclosure"
 	gui.ResetOnSpawn = false
 
+	-- Top-left corner, compact size so it doesn't block gameplay (OnboardingOverlay is bottom-center)
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0.8, 0, 0.5, 0)
-	frame.Position = UDim2.new(0.1, 0, 0.25, 0)
+	frame.Size = UDim2.new(0.32, 0, 0.28, 0)
+	frame.Position = UDim2.new(0.02, 0, 0.02, 0)
 	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	frame.Parent = gui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -20, 1, -20)
-	label.Position = UDim2.new(0, 10, 0, 10)
+	label.Size = UDim2.new(1, -12, 1, -12)
+	label.Position = UDim2.new(0, 6, 0, 6)
 	label.BackgroundTransparency = 1
 	label.Text = disclosureText
 	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextSize = 14
+	label.TextSize = 11
 	label.TextWrapped = true
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextYAlignment = Enum.TextYAlignment.Top

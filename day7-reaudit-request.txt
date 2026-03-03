@@ -1,0 +1,41 @@
+Day 7 re-audit request.
+
+Please audit against:
+- `pillars-v2.md` (Day 7, §5/§6/§7 trust and monetization rules)
+- `readiness-checklist.md` (§3, §5, §6, §8)
+- `milestone-acceptance-matrix.md` (Day 7 section)
+
+Primary evidence artifacts:
+- `day7-monetization-review-sheet.md`
+- `day7-compliance-test-notes.md`
+- `day7-launch-dry-run-output.md`
+- `day7-release-readiness-checklist.md`
+- `milestone-acceptance-matrix.md` (Day 7 section)
+
+Evaluate Day 7 Must Pass:
+1) Every paid item is tagged and approved as `Expression` or `Convenience`
+2) No paid item grants insurmountable combat advantage
+3) Region/age restricted flows are properly gated
+4) Probabilities and pity disclosures are visible and accurate
+5) Rollback + hotfix procedure is validated
+6) Disclosure checks pass in 100% of roll entry points
+7) Crash-free sessions in release candidate window are >= 99.0%
+
+Execution evidence summary:
+- Day 7 automated tests: 14 passed, 0 failed
+- Disclosure coverage: 3/3 entry points (100%)
+- Compliance gating matrix: 4/4 pass
+- Crash-free sessions: 99.2% (248/250)
+- Rollback/hotfix dry-run: pass
+
+Return format:
+1. Status (Green/Yellow/Red + confidence)
+2. Rule adherence (Yes/No + violations)
+3. Day 7 Must Pass table (requirement -> evidence -> PASS/FAIL)
+4. Findings by severity
+5. Required actions before PASS (if any)
+6. Recommendation (GO / GO WITH RISKS / NO-GO)
+7. Remaining blockers
+
+If all criteria pass with traceable execution evidence, explicitly state:
+"Day 7 can be marked PASS."

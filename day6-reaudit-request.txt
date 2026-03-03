@@ -1,0 +1,38 @@
+Day 6 re-audit request.
+
+Please audit against:
+- `pillars-v2.md` (Day 6: playtests, exploit checks, tuning/balance pass)
+- `readiness-checklist.md` (§5, §6, §8)
+- `milestone-acceptance-matrix.md` (Day 6 section)
+
+Primary evidence artifacts:
+- `day6-playtest-report.md`
+- `day6-exploit-findings.md`
+- `day6-balance-changelog.md`
+- `milestone-acceptance-matrix.md` (Day 6 section)
+
+Evaluate Day 6 Must Pass:
+1) No critical economy exploit remains open
+2) No critical progression blocker remains open
+3) Retention risk items have mitigation owner + date
+4) Config changes are versioned and reversible
+5) All high-severity risks have mitigation date <= 7 days from discovery
+
+Execution evidence summary:
+- Playtest runs completed: 10 (completion 10/10, blockers 0)
+- Open critical progression blockers: 0
+- Open critical economy exploits: 0
+- Open high risks + mitigation dates: 0 open high risks (no mitigation schedule required)
+- Versioned/reversible config changes count: 0 changes applied (documented as CHG-000 no-delta pass)
+
+Return format:
+1. Status (Green/Yellow/Red + confidence)
+2. Rule adherence (Yes/No + violations)
+3. Day 6 Must Pass table (requirement -> evidence -> PASS/FAIL)
+4. Findings by severity
+5. Required actions before PASS (if any)
+6. Recommendation (GO / GO WITH RISKS / NO-GO)
+7. Remaining blockers
+
+If all criteria pass with traceable execution evidence, explicitly state:
+"Day 6 can be marked PASS."

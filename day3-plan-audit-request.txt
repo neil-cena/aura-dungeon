@@ -1,0 +1,30 @@
+Day 3 pre-implementation audit request.
+
+Please audit the Day 3 plan before we start implementation.
+
+Audit against:
+- `pillars-v2.md` (especially §1.2 First 60 Seconds, §3 Social Hub and Identity)
+- `readiness-checklist.md`
+- `milestone-acceptance-matrix.md` (Day 3 section)
+
+Primary artifact:
+- `day3-hub-onboarding-plan.md`
+
+Evaluate:
+1) Deliverables (hub baseline, first-roll onboarding, beginner rift entry/return) are clearly scoped and aligned with the matrix.
+2) Must Pass criteria match the matrix and are measurable (5s first interaction, 30–50s first combat, reward by 60s, loop inferable without tutorial text, ≥70% first-minute completion).
+3) Evidence plan (10 runs, drop-off points) is sufficient for sign-off.
+4) No conflict with pillars (trust, server authority for rolls, disclosure, no mandatory tutorial walls).
+5) Any gaps or risks that should be addressed before implementation.
+
+Return format:
+1. Status (Green / Yellow / Red + confidence)
+2. Alignment with pillars and matrix (Yes/No + issues)
+3. Day 3 deliverables/criteria check (each item → aligned / gap / risk)
+4. Findings by severity (Critical / High / Medium / Low)
+5. Required actions before implementation (if any)
+6. Recommendation (GO to implement / GO WITH RISKS / NO-GO — revise plan first)
+7. Remaining blockers
+
+If the plan is ready for implementation, explicitly state:
+"Day 3 plan is approved; implementation can proceed."

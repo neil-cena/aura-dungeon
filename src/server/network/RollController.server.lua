@@ -8,6 +8,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(script.Parent.Remotes)
 local RollService = require(script.Parent.Parent.domain.RollService)
 local RollTypes = require(ReplicatedStorage.shared.types.RollTypes)
+local OnboardingService = require(script.Parent.Parent.domain.OnboardingService)
+local OnboardingConfig = require(ReplicatedStorage.shared.config.OnboardingConfig)
 
 local ROLL_COOLDOWN_SEC = 0.5
 local lastRollTime = {}
@@ -46,6 +48,12 @@ Remotes.RequestRoll.OnServerEvent:Connect(function(player, laneOrPayload)
 	if not result then
 		Remotes.RollResult:FireClient(player, { success = false, err = err or "roll_failed" })
 		return
+	end
+
+	-- Day 3: Mark first roll complete if in onboarding firstInteraction step
+	local state, _ = OnboardingService.GetState(playerId)
+	if state and state.current_step == OnboardingConfig.Step.FirstInteraction then
+		OnboardingService.MarkFirstRollComplete(playerId)
 	end
 
 	Remotes.RollResult:FireClient(player, { success = true, result = result })

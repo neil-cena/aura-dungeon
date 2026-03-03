@@ -1,0 +1,36 @@
+Day 4 re-audit request.
+
+Please audit against:
+- `pillars-v2.md` (§2 Combat and Dungeon Pillar)
+- `readiness-checklist.md`
+- `milestone-acceptance-matrix.md` (Day 4 section)
+
+Primary evidence artifacts:
+- `day4-dungeon-test-checklist.md`
+- `DAY4_TEST_INSTRUCTIONS.md`
+- `milestone-acceptance-matrix.md` (Day 4 section)
+
+Evaluate Day 4 Must Pass:
+1) Average run time remains in 2-3 minute target
+2) Boss appears in every run
+3) Loss state preserves partial progress
+4) Mute-play readability is acceptable
+5) Runtime variance is controlled (at least 80% of runs complete inside 2-3 minutes)
+
+Execution evidence summary:
+- Automated Day 4 specs: 21 passed, 0 failed
+- 20-run simulation: avg 146.55s, in-window 18/20 (90.0%)
+- Boss presence: 20/20
+- Loss retention: 4/4 loss runs (100%)
+
+Return format:
+1. Status (Green/Yellow/Red + confidence)
+2. Rule adherence (Yes/No + violations)
+3. Day 4 Must Pass table (requirement -> evidence -> PASS/FAIL)
+4. Findings by severity
+5. Required actions before PASS (if any)
+6. Recommendation (GO / GO WITH RISKS / NO-GO)
+7. Remaining blockers
+
+If all five criteria pass with traceable execution evidence, explicitly state:
+"Day 4 can be marked PASS."

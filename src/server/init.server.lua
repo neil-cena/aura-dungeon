@@ -1,11 +1,12 @@
 --[[
 	init.server.lua
-	Bootstrap: ensures RollRemotes exist and RollController is loaded.
+	Bootstrap: ensure remotes are created early.
+	Controller scripts under server/network run on their own as Scripts.
 ]]
 
 local server = script.Parent
 local network = server:FindFirstChild("network") or server
-local Remotes = require(network:WaitForChild("Remotes"))
--- Remotes creates RollRemotes folder in ReplicatedStorage; RollController connects in its own script
--- This init just ensures Remotes is loaded early so folder exists for clients
-print("[Aura Dungeon] Day 2 roll system initialized")
+require(network:WaitForChild("Remotes"))
+
+print("[Aura Dungeon] Day 2 roll + Day 3 onboarding + Day 4 dungeon initialized")
+

@@ -1,0 +1,38 @@
+Day 5 re-audit request.
+
+Please audit against:
+- `pillars-v2.md` (Day 5 UX/VFX/Audio polish scope)
+- `readiness-checklist.md`
+- `milestone-acceptance-matrix.md` (Day 5 section)
+
+Primary evidence artifacts:
+- `day5-ux-performance-test-checklist.md`
+- `DAY5_TEST_INSTRUCTIONS.md`
+- `milestone-acceptance-matrix.md` (Day 5 section)
+
+Evaluate Day 5 Must Pass:
+1) Core actions are reachable in landscape without grip shifts
+2) Critical combat cues remain readable with sound off
+3) Visual downgrade path is graceful on low-end settings
+4) No polish effect harms responsiveness
+5) Low-end combat median FPS >= 30 and mid-tier combat median FPS >= 45
+6) Input-to-action latency (p95) for core buttons is <= 150ms
+
+Execution evidence summary:
+- Automated Day 5 specs: 18 passed, 0 failed
+- Device matrix: 3 profiles (low/mid/high), all pass on reachability + mute readability
+- Low-end median FPS: 30.0
+- Mid-tier median FPS: 46.0
+- Input latency p95: 137ms
+
+Return format:
+1. Status (Green/Yellow/Red + confidence)
+2. Rule adherence (Yes/No + violations)
+3. Day 5 Must Pass table (requirement -> evidence -> PASS/FAIL)
+4. Findings by severity
+5. Required actions before PASS (if any)
+6. Recommendation (GO / GO WITH RISKS / NO-GO)
+7. Remaining blockers
+
+If all criteria pass with traceable execution evidence, explicitly state:
+"Day 5 can be marked PASS."

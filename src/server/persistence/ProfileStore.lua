@@ -6,6 +6,8 @@
 
 local HttpService = game:GetService("HttpService")
 
+local ProfileStore = {}
+
 local PROFILE_STORE_KEY = "PlayerData_%s"
 local MAX_ATTEMPTS = 3
 local BACKOFF_MS = { 100, 250, 500 }
@@ -59,7 +61,11 @@ function ProfileStore.CreateDefaultProfile(playerId)
 			weapon_lane = { roll_count_total = 0, since_rare_plus = 0, since_epic_plus = 0, since_legendary = 0 },
 		},
 		progression = { dungeons_completed = 0, boss_kills = 0, onboarding_state = {} },
-		compliance = {},
+		compliance = {
+			age_group = "unknown",
+			region_code = "unknown",
+			restricted_monetization = true, -- Safe default until policy resolution.
+		},
 	}
 end
 
@@ -118,6 +124,25 @@ end
 -- For tests: clear cache
 function ProfileStore.ClearCache()
 	table.clear(profileCache)
+end
+
+-- For tests: explicit compliance override on cached profile.
+function ProfileStore.SetCompliance(playerId, compliancePatch)
+	if type(playerId) ~= "string" or playerId == "" then
+		return false, "invalid player id"
+	end
+	if type(compliancePatch) ~= "table" then
+		return false, "invalid compliance patch"
+	end
+
+	local ok, err = ProfileStore.UpdateProfile(playerId, function(profile)
+		profile.compliance = profile.compliance or {}
+		for k, v in pairs(compliancePatch) do
+			profile.compliance[k] = v
+		end
+		return profile, nil
+	end)
+	return ok, err
 end
 
 return ProfileStore

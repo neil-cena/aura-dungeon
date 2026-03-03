@@ -1,0 +1,31 @@
+Day 3 re-audit request.
+
+Please audit against:
+- pillars-v2.md (§1.2 First 60 Seconds, §3 Social Hub)
+- readiness-checklist.md
+- milestone-acceptance-matrix.md (Day 3 section)
+
+Primary evidence artifacts:
+- day3-onboarding-test-checklist.md (10-run log + RunAll output)
+- day3-hub-onboarding-plan.md
+- DAY3_TEST_INSTRUCTIONS.md
+- milestone-acceptance-matrix.md (Day 3 section)
+
+Evaluate Day 3 Must Pass:
+1) First interaction within 5 seconds
+2) First combat action within 30-50 seconds
+3) Meaningful reward within 60 seconds
+4) Loop inferable without tutorial wall text
+5) First-minute loop completion >= 70% across 10 fresh runs
+
+Return format:
+1. Status (Green/Yellow/Red + confidence)
+2. Rule adherence (Yes/No + violations)
+3. Day 3 Must Pass table (requirement -> evidence -> PASS/FAIL)
+4. Findings by severity
+5. Required actions before PASS (if any)
+6. Recommendation (GO / GO WITH RISKS / NO-GO)
+7. Remaining blockers
+
+If all five criteria pass with traceable evidence, explicitly state:
+"Day 3 can be marked PASS."
