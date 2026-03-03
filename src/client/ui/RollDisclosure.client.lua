@@ -45,9 +45,9 @@ function RollDisclosure.CreateDisclosureGui()
 	return gui
 end
 
--- Auto-init: show disclosure when local player exists
+-- Legacy disclosure is opt-in only. RollPanel now owns disclosure presentation.
 local player = Players.LocalPlayer
-if player then
+if player and _G.AuraShowLegacyDisclosure == true then
 	local gui = RollDisclosure.CreateDisclosureGui()
 	gui.Parent = player:WaitForChild("PlayerGui")
 end

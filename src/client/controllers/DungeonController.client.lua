@@ -8,11 +8,9 @@ local UserInputService = game:GetService("UserInputService")
 
 local PolishConfig = require(ReplicatedStorage.shared.config.PolishConfig)
 local PolishTypes = require(ReplicatedStorage.shared.types.PolishTypes)
+local DungeonTierCatalog = require(ReplicatedStorage.shared.config.DungeonTierCatalog)
 
-local dungeonRemotes = ReplicatedStorage:WaitForChild("DungeonRemotes", 10)
-if not dungeonRemotes then
-	return
-end
+local dungeonRemotes = ReplicatedStorage:WaitForChild("DungeonRemotes")
 
 local GetDungeonState = dungeonRemotes:FindFirstChild("GetDungeonState")
 local RequestStartDungeonRun = dungeonRemotes:FindFirstChild("RequestStartDungeonRun")
@@ -34,6 +32,7 @@ local state = {
 	mute_mode = false,
 	quality_tier = PolishConfig.QualityTier.Mid,
 	device_profile = "mid",
+	selected_tier = DungeonTierCatalog.DefaultTier or "beginner",
 }
 
 local latencySamplesMs = {}
@@ -62,6 +61,9 @@ local function setState(nextState)
 	for k, v in pairs(nextState) do
 		state[k] = v
 	end
+	if type(nextState.tier_id) == "string" then
+		state.selected_tier = nextState.tier_id
+	end
 	updateQualityTier()
 	_G.Day4DungeonState = state
 end
@@ -77,7 +79,7 @@ end
 
 local function startRun()
 	pendingActionSentAt = os.clock()
-	RequestStartDungeonRun:FireServer({ action = "start_run" })
+	RequestStartDungeonRun:FireServer({ action = "start_run", tier_id = state.selected_tier })
 end
 
 local function advancePhase()
@@ -92,7 +94,16 @@ end
 
 local function setMuteMode(enabled)
 	state.mute_mode = enabled == true
+	_G.AuraMuteAudio = state.mute_mode
 	_G.Day4DungeonState = state
+end
+
+local function setSelectedTier(tierId)
+	local tier = DungeonTierCatalog.GetTier(tierId)
+	if tier then
+		state.selected_tier = tier.id
+		_G.Day4DungeonState = state
+	end
 end
 
 local function pushLatencySampleFromPending()
@@ -122,6 +133,9 @@ DungeonUpdate.OnClientEvent:Connect(function(payload)
 	end
 	if payload.success and payload.state then
 		setState(payload.state)
+		if payload.enemy_state then
+			state.enemy_state = payload.enemy_state
+		end
 		state.last_server_sent_at = payload.server_sent_at
 		pushLatencySampleFromPending()
 	elseif payload.success and payload.result then
@@ -146,6 +160,7 @@ _G.Day4DungeonActions = {
 	advancePhase = advancePhase,
 	completeRun = completeRun,
 	setMuteMode = setMuteMode,
+	setSelectedTier = setSelectedTier,
 }
 
 updateQualityTier()

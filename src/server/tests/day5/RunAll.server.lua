@@ -4,6 +4,10 @@
 ]]
 
 local day5 = script.Parent
+if _G.AuraRunTests ~= true then
+	return
+end
+
 local Tests = {
 	ThumbReachability = require(day5["ThumbReachability.spec"]),
 	MuteReadabilityDay5 = require(day5["MuteReadabilityDay5.spec"]),

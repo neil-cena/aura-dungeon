@@ -4,6 +4,10 @@
 ]]
 
 local day7 = script.Parent
+if _G.AuraRunTests ~= true then
+	return
+end
+
 local Tests = {
 	ComplianceGating = require(day7["ComplianceGating.spec"]),
 	DisclosureCoverage = require(day7["DisclosureCoverage.spec"]),

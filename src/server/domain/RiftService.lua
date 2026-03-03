@@ -55,8 +55,8 @@ function RiftService.CompleteBeginnerRift(playerId)
 end
 
 -- Day 4 delegates
-function RiftService.StartDungeonRun(playerId)
-	return DungeonService.StartRun(playerId)
+function RiftService.StartDungeonRun(playerId, tierId, instanceOwnerId, partyMemberIds)
+	return DungeonService.StartRun(playerId, tierId, instanceOwnerId, partyMemberIds)
 end
 
 function RiftService.AdvanceDungeonPhase(playerId)

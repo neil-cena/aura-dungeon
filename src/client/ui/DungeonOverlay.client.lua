@@ -6,6 +6,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 if not player then
@@ -13,8 +14,13 @@ if not player then
 end
 
 local DungeonConfig = require(ReplicatedStorage.shared.config.DungeonConfig)
+local DungeonTierCatalog = require(ReplicatedStorage.shared.config.DungeonTierCatalog)
 local PolishConfig = require(ReplicatedStorage.shared.config.PolishConfig)
 local PolishTypes = require(ReplicatedStorage.shared.types.PolishTypes)
+local interactionRemotes = ReplicatedStorage:WaitForChild("InteractionRemotes")
+local showDungeonPanel = interactionRemotes:WaitForChild("ShowDungeonPanel")
+local combatRemotes = ReplicatedStorage:WaitForChild("CombatRemotes")
+local combatUpdate = combatRemotes:WaitForChild("CombatUpdate")
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "DungeonOverlay"
@@ -28,6 +34,7 @@ frame.Position = UDim2.new(PolishConfig.ThumbLayout.ActionPanel.PositionScale.X,
 frame.BackgroundColor3 = Color3.fromRGB(22, 30, 40)
 frame.BackgroundTransparency = 0.18
 frame.BorderSizePixel = 0
+frame.Visible = false
 frame.Parent = gui
 
 local title = Instance.new("TextLabel")
@@ -103,6 +110,15 @@ qualityLabel.TextSize = 11
 qualityLabel.TextXAlignment = Enum.TextXAlignment.Left
 qualityLabel.Parent = frame
 
+local tierButton = Instance.new("TextButton")
+tierButton.Size = UDim2.new(0.42, 0, 0.10, 0)
+tierButton.Position = UDim2.new(0.12, 0, 0.02, 0)
+tierButton.BackgroundColor3 = Color3.fromRGB(62, 92, 148)
+tierButton.TextColor3 = Color3.new(1, 1, 1)
+tierButton.TextSize = 11
+tierButton.Text = "Tier: Beginner"
+tierButton.Parent = frame
+
 local mainButton = Instance.new("TextButton")
 mainButton.Size = UDim2.new(
 	PolishConfig.ThumbLayout.CoreButtons.Main.SizeScale.X,
@@ -162,6 +178,36 @@ lossButton.TextSize = 13
 lossButton.Visible = false
 lossButton.Parent = frame
 
+local activeTelegraphPart = nil
+
+local function clearTelegraphVisual()
+	if activeTelegraphPart and activeTelegraphPart.Parent then
+		activeTelegraphPart:Destroy()
+	end
+	activeTelegraphPart = nil
+end
+
+local function showTelegraphVisual(position, radius, duration)
+	clearTelegraphVisual()
+	local ring = Instance.new("Part")
+	ring.Name = "BossTelegraphLocal"
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Material = Enum.Material.Neon
+	ring.Color = Color3.fromRGB(255, 90, 90)
+	ring.Transparency = 0.45
+	ring.Size = Vector3.new(0.3, radius * 2, radius * 2)
+	ring.CFrame = CFrame.new(position) * CFrame.Angles(0, 0, math.rad(90))
+	ring.Parent = Workspace
+	activeTelegraphPart = ring
+	task.delay(duration, function()
+		if activeTelegraphPart == ring then
+			clearTelegraphVisual()
+		end
+	end)
+end
+
 local function getActions()
 	return _G.Day4DungeonActions
 end
@@ -200,6 +246,8 @@ local function refresh()
 	statusLabel.Text = string.format("Status: %s | Wave: %d", tostring(state.status or "idle"), tonumber(state.wave_index or 0))
 	timerLabel.Text = string.format("Runtime: %.1fs (target %ds-%ds)", tonumber(state.runtime_seconds or 0), DungeonConfig.Run.TargetMinSeconds, DungeonConfig.Run.TargetMaxSeconds)
 	muteButton.Text = (state.mute_mode and "Mute cues: on" or "Mute cues: off")
+	local tier = DungeonTierCatalog.GetTier(state.selected_tier or state.tier_id or DungeonTierCatalog.DefaultTier)
+	tierButton.Text = "Tier: " .. tostring(tier and tier.display_name or "Beginner")
 
 	if state.status == DungeonConfig.Status.Boss then
 		telegraphLabel.Text = "Cue: " .. DungeonConfig.Telegraph.BossSpawnText .. " " .. DungeonConfig.Telegraph.PromptText
@@ -236,6 +284,25 @@ local function refresh()
 	end
 end
 
+local function cycleTier()
+	local ids = DungeonTierCatalog.GetOrderedTierIds()
+	local state = getState()
+	local currentId = state.selected_tier or state.tier_id or DungeonTierCatalog.DefaultTier
+	local idx = 1
+	for i, id in ipairs(ids) do
+		if id == currentId then
+			idx = i
+			break
+		end
+	end
+	local nextId = ids[(idx % #ids) + 1]
+	local actions = getActions()
+	if actions and actions.setSelectedTier then
+		actions.setSelectedTier(nextId)
+	end
+	task.delay(0.05, refresh)
+end
+
 muteButton.MouseButton1Click:Connect(function()
 	local actions = getActions()
 	local state = getState()
@@ -243,6 +310,10 @@ muteButton.MouseButton1Click:Connect(function()
 		actions.setMuteMode(not (state.mute_mode == true))
 	end
 	task.delay(0.05, refresh)
+end)
+
+tierButton.MouseButton1Click:Connect(function()
+	cycleTier()
 end)
 
 mainButton.MouseButton1Click:Connect(function()
@@ -286,4 +357,41 @@ end)
 task.defer(function()
 	task.wait(0.3)
 	refresh()
+end)
+
+if showDungeonPanel then
+	showDungeonPanel.OnClientEvent:Connect(function(payload)
+		frame.Visible = true
+		refresh()
+		if payload and payload.auto_start == true then
+			local actions = getActions()
+			local state = getState()
+			if actions and actions.startRun and (state.status == DungeonConfig.Status.Idle or state.status == DungeonConfig.Status.Won or state.status == DungeonConfig.Status.Lost) then
+				actions.startRun()
+				task.delay(0.25, refresh)
+			end
+		end
+	end)
+end
+
+combatUpdate.OnClientEvent:Connect(function(payload)
+	if type(payload) ~= "table" then
+		return
+	end
+	if payload.boss_telegraph ~= true then
+		return
+	end
+	local position = payload.position
+	local radius = tonumber(payload.radius or 10)
+	local preHit = tonumber(payload.pre_hit_seconds or 1.2)
+	if typeof(position) ~= "Vector3" then
+		return
+	end
+	telegraphLabel.Text = "Cue: " .. tostring(payload.prompt_text or DungeonConfig.Telegraph.PromptText)
+	showTelegraphVisual(position + Vector3.new(0, 0.2, 0), radius, preHit)
+	task.delay(preHit, function()
+		if telegraphLabel and telegraphLabel.Parent then
+			telegraphLabel.Text = "Cue: Impact resolved. Reposition."
+		end
+	end)
 end)

@@ -7,6 +7,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(script.Parent.Remotes)
 local RollService = require(script.Parent.Parent.domain.RollService)
+local ProgressionService = require(script.Parent.Parent.domain.ProgressionService)
 local RollTypes = require(ReplicatedStorage.shared.types.RollTypes)
 local OnboardingService = require(script.Parent.Parent.domain.OnboardingService)
 local OnboardingConfig = require(ReplicatedStorage.shared.config.OnboardingConfig)
@@ -50,10 +51,28 @@ Remotes.RequestRoll.OnServerEvent:Connect(function(player, laneOrPayload)
 		return
 	end
 
+	if result.auto_equipped_slot == "aura" and player.Character then
+		player.Character:SetAttribute("EquippedAuraId", result.item_id)
+		Remotes.AuraEquipped:FireAllClients({
+			player_user_id = player.UserId,
+			item_id = result.item_id,
+		})
+	end
+
 	-- Day 3: Mark first roll complete if in onboarding firstInteraction step
 	local state, _ = OnboardingService.GetState(playerId)
 	if state and state.current_step == OnboardingConfig.Step.FirstInteraction then
 		OnboardingService.MarkFirstRollComplete(playerId)
+	end
+
+	if result.rarity == "Legendary" then
+		ProgressionService.RecordLegendaryRoll(playerId)
+		Remotes.GlobalCelebration:FireAllClients({
+			player_name = player.Name,
+			rarity = result.rarity,
+			lane = result.lane,
+			item_id = result.item_id,
+		})
 	end
 
 	Remotes.RollResult:FireClient(player, { success = true, result = result })

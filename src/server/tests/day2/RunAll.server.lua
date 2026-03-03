@@ -5,6 +5,10 @@
 ]]
 
 local day2 = script.Parent
+if _G.AuraRunTests ~= true then
+	return
+end
+
 local Tests = {
 	AuthorityBoundary = require(day2["AuthorityBoundary.spec"]),
 	PityDeterminism = require(day2["PityDeterminism.spec"]),

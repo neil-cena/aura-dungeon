@@ -62,6 +62,7 @@ button.TextSize = 16
 button.Parent = frame
 
 local lastRewardText = ""
+local tutorialDismissed = false
 
 local function getState()
 	if GetOnboardingState:IsA("RemoteFunction") then
@@ -83,6 +84,10 @@ local function updateUI()
 	end
 
 	local step = state.current_step or OnboardingConfig.Step.Spawned
+	if tutorialDismissed and (step == OnboardingConfig.Step.Rewarded or step == OnboardingConfig.Step.ReturnedHub) then
+		frame.Visible = false
+		return
+	end
 
 	if step == OnboardingConfig.Step.Spawned then
 		frame.Visible = true
@@ -133,6 +138,7 @@ button.MouseButton1Click:Connect(function()
 	elseif (step == OnboardingConfig.Step.RiftEntered or step == OnboardingConfig.Step.FirstCombat) and state.ts_first_combat and RequestCompleteBeginnerRift then
 		RequestCompleteBeginnerRift:FireServer()
 	elseif step == OnboardingConfig.Step.Rewarded or step == OnboardingConfig.Step.ReturnedHub then
+		tutorialDismissed = true
 		frame.Visible = false
 		return
 	end

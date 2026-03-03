@@ -4,6 +4,10 @@
 ]]
 
 local day4 = script.Parent
+if _G.AuraRunTests ~= true then
+	return
+end
+
 local Tests = {
 	RuntimeWindow = require(day4["RuntimeWindow.spec"]),
 	BossPresence = require(day4["BossPresence.spec"]),

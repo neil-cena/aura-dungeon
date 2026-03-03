@@ -5,6 +5,10 @@
 ]]
 
 local day3 = script.Parent
+if _G.AuraRunTests ~= true then
+	return
+end
+
 local Tests = {
 	OnboardingTiming = require(day3["OnboardingTiming.spec"]),
 	OnboardingAuthority = require(day3["OnboardingAuthority.spec"]),

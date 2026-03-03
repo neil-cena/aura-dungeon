@@ -13,6 +13,7 @@ local PityEngine = require(script.Parent.PityEngine)
 local RngEngine = require(script.Parent.RngEngine)
 local AuditLogger = require(script.Parent.AuditLogger)
 local ProfileStore = require(script.Parent.Parent.persistence.ProfileStore)
+local PartyService = require(script.Parent.PartyService)
 
 local RollService = {}
 
@@ -56,10 +57,23 @@ function RollService.ExecuteRoll(playerId, lane)
 	}
 
 	local rngRarity = RngEngine.Roll()
+	local friendCount = PartyService.GetFriendCountInParty(playerId)
+	local partyLuckBonus = math.min(0.30, friendCount * 0.10)
+	local rngRoll = math.random()
+	if partyLuckBonus > 0 and rngRoll <= partyLuckBonus then
+		local upgradeMap = {
+			Common = RollConfig.Rarity.Rare,
+			Rare = RollConfig.Rarity.Epic,
+			Epic = RollConfig.Rarity.Legendary,
+			Legendary = RollConfig.Rarity.Legendary,
+		}
+		rngRarity = upgradeMap[rngRarity] or rngRarity
+	end
 	local rarity, pityOverride = PityEngine.ResolveRarityWithPity(preCounters, rngRarity)
 	local itemId = RollService.GenerateItemId(lane, rarity)
 
 	local postCounters = PityEngine.UpdateCountersAfterResult(preCounters, rarity)
+	local autoEquippedSlot = nil
 
 	-- Atomic update: spend, grant, update counters, log
 	local success, updateErr = ProfileStore.UpdateProfile(playerId, function(p)
@@ -71,6 +85,14 @@ function RollService.ExecuteRoll(playerId, lane)
 		np.inventory = np.inventory or { auras = {}, weapons = {} }
 		local invKey = lane == RollConfig.Lane.Aura and "auras" or "weapons"
 		table.insert(np.inventory[invKey], { item_id = itemId, rarity = rarity, count = 1 })
+		np.inventory.equipped = np.inventory.equipped or {}
+		if lane == RollConfig.Lane.Aura and not np.inventory.equipped.aura then
+			np.inventory.equipped.aura = itemId
+			autoEquippedSlot = "aura"
+		elseif lane == RollConfig.Lane.Weapon and not np.inventory.equipped.weapon then
+			np.inventory.equipped.weapon = itemId
+			autoEquippedSlot = "weapon"
+		end
 		return np, nil
 	end)
 
@@ -115,6 +137,9 @@ function RollService.ExecuteRoll(playerId, lane)
 		item_id = itemId,
 		pity_override_used = pityOverride,
 		post_counters = postCounters,
+		auto_equipped_slot = autoEquippedSlot,
+		party_friend_count = friendCount,
+		party_luck_bonus = partyLuckBonus,
 	}, nil
 end
 
