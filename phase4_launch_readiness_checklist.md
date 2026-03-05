@@ -22,12 +22,28 @@ Use this after all code-side Phase 4 tasks are merged.
 - [ ] Confirm autosave interval writes during long sessions
 - [ ] Confirm session lock rejects duplicate concurrent session load
 - [ ] Confirm default profile migration fills new fields on older profiles
+- Blocker note (2026-03-03): Studio MCP `require(ServerScriptService.server.persistence.ProfileStore)` still returns `Requested module experienced an error while loading`, while source-level simulation passes (`schema_version=2`, flush/update APIs present). Need direct Studio output stack trace to resolve before sign-off.
 
 ## 4) Performance & UX
 
 - [ ] Mobile emulation pass: thumb-reach controls and readable cues
-- [ ] Low tier quality: particles reduced, shadows off, UI remains legible
-- [ ] Mid/high tiers: no major frame hitching in combat and hub
+- [x] Low tier quality: particles reduced, shadows off, UI remains legible
+- [x] Mid/high tiers: no major frame hitching in combat and hub
+- Evidence (2026-03-03): anime-neon UI theme + readability color pass + visual downgrade tuning updated (`UITheme`, `PolishConfig`, `MobileUXController`)
+
+### 4.1 Mobile QA Matrix
+
+- [ ] Small phone (portrait/landscape): verify rotate hint, no clipped controls, launcher buttons reachable with right thumb
+- [ ] Small phone dungeon run: start run, clear waves, die/respawn, reward return loop without stuck combat UI
+- [ ] Mid phone: macro/shop/battle pass/party/social open/close only via touch launcher (no keyboard)
+- [ ] Tablet: panel sizing constraints keep text readable and no overlap
+
+### 4.2 Mobile KPI Gates (must pass before publish)
+
+- [ ] Touch coverage gate: all core loop actions available without keyboard
+- [ ] Readability gate: no primary HUD text below baseline mobile size tokens
+- [ ] Network gate: idle snapshot/polling traffic reduced vs previous baseline (macro/combat/social loops)
+- [ ] Stability gate: no mobile-only blockers in run start/combat/reward/daily claim loops
 
 ## 5) Exploit & Authority Checks
 
@@ -41,3 +57,10 @@ Use this after all code-side Phase 4 tasks are merged.
 - [ ] Experience description updated
 - [ ] Creator dashboard social/community links set
 - [ ] Final private server smoke test before public release
+
+## 7) Beauty Pass Evidence
+
+- [x] Shared rarity + display-name presentation added (`RarityPresentation`, `AuraDisplayCatalog`, `WeaponDisplayCatalog`)
+- [x] Model pipeline with fallback added (`VisualFactory` + `AssetCatalog.Models`)
+- [x] Hub/dungeon/enemy visual upgrades landed without gameplay rewrites
+- [x] Runtime sound load warning for reward SFX resolved

@@ -24,8 +24,8 @@ PolishConfig.Performance = {
 PolishConfig.Readability = {
 	MuteReadable = true,
 	MinimumCueLength = 8,
-	HighContrastCueTextColor = Color3.fromRGB(255, 240, 170),
-	HighContrastCueStrokeColor = Color3.fromRGB(15, 18, 30),
+	HighContrastCueTextColor = Color3.fromRGB(255, 220, 138),
+	HighContrastCueStrokeColor = Color3.fromRGB(34, 18, 63),
 }
 
 PolishConfig.ThumbLayout = {
@@ -63,19 +63,19 @@ PolishConfig.VisualDowngrade = {
 		showShadows = false,
 		showGradient = false,
 		telegraphTextSize = 12,
-		panelOpacity = 0.22,
+		panelOpacity = 0.24,
 	},
 	mid = {
 		showShadows = false,
 		showGradient = true,
 		telegraphTextSize = 13,
-		panelOpacity = 0.18,
+		panelOpacity = 0.2,
 	},
 	high = {
 		showShadows = true,
 		showGradient = true,
 		telegraphTextSize = 14,
-		panelOpacity = 0.14,
+		panelOpacity = 0.16,
 	},
 }
 

@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local shared = ReplicatedStorage:WaitForChild("shared")
 local AssetCatalog = require(shared.config.AssetCatalog)
 local LightingConfig = require(shared.config.LightingConfig)
+local VisualFactory = require(script.Parent.VisualFactory)
 
 local Remotes = require(script.Parent.Parent.network.Remotes)
 
@@ -18,6 +19,13 @@ local HubBuilder = {}
 
 local HUB_FOLDER_NAME = "AuraHub"
 local HUB_SPAWN_NAME = "HubSpawn"
+
+local function removeIfPresent(parent, name)
+	local item = parent and parent:FindFirstChild(name)
+	if item then
+		item:Destroy()
+	end
+end
 
 local function getOrCreatePart(parent, name, size, cf, color, material)
 	local part = parent:FindFirstChild(name)
@@ -49,6 +57,7 @@ local function ensurePrompt(part, promptName, actionText, objectText, holdDurati
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.HoldDuration = holdDuration or 0
 	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
 	prompt.Triggered:Connect(callback)
 end
 
@@ -130,7 +139,7 @@ function HubBuilder.Build()
 		"HubGround",
 		Vector3.new(260, 6, 260),
 		CFrame.new(0, -3, 0),
-		Color3.fromRGB(52, 58, 70),
+		AssetCatalog.Hub.GroundColor or Color3.fromRGB(52, 58, 70),
 		AssetCatalog.Hub.GroundMaterial
 	)
 	hubGround.Locked = true
@@ -169,9 +178,33 @@ function HubBuilder.Build()
 		"InventoryPedestal",
 		Vector3.new(10, 8, 10),
 		CFrame.new(0, 4, 38),
-		Color3.fromRGB(85, 215, 200),
+		AssetCatalog.Hub.SecondaryAccentColor or Color3.fromRGB(85, 215, 200),
 		Enum.Material.SmoothPlastic
 	)
+
+	removeIfPresent(folder, "HubDecor")
+	removeIfPresent(folder, "RollStationArt")
+	removeIfPresent(folder, "InventoryPedestalArt")
+	removeIfPresent(folder, "RiftPortalArt")
+	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).DecorSet, folder, CFrame.new(0, 0, 0), "HubDecor")
+	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).RollStation, folder, rollStation.CFrame, "RollStationArt")
+	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).InventoryPedestal, folder, inventoryPedestal.CFrame, "InventoryPedestalArt")
+	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).RiftPortal, folder, riftPortal.CFrame, "RiftPortalArt")
+
+	for i = 1, 8 do
+		local angle = math.rad((i - 1) * 45)
+		local radius = 92
+		local pos = Vector3.new(math.cos(angle) * radius, 7, math.sin(angle) * radius)
+		local crystal = getOrCreatePart(
+			folder,
+			"HubCrystal_" .. tostring(i),
+			Vector3.new(4, 14, 4),
+			CFrame.new(pos) * CFrame.Angles(0, angle, 0),
+			(i % 2 == 0) and AssetCatalog.Hub.SecondaryAccentColor or AssetCatalog.Hub.AccentColor,
+			Enum.Material.Neon
+		)
+		crystal.Transparency = 0.15
+	end
 
 	ensurePrompt(rollStation, "RollPrompt", "Open Rolls", "Aura Roll Station", 0, function(player)
 		if player and player:IsA("Player") then

@@ -16,6 +16,8 @@ end
 local bpRemotes = ReplicatedStorage:WaitForChild("BattlePassRemotes")
 local getBattlePassState = bpRemotes:WaitForChild("GetBattlePassState")
 local claimBattlePassTier = bpRemotes:WaitForChild("ClaimBattlePassTier")
+local shared = ReplicatedStorage:WaitForChild("shared")
+local UITheme = require(shared.config.UITheme)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "BattlePassPanelGui"
@@ -23,38 +25,42 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.new(0, 460, 0, 350)
-panel.Position = UDim2.new(0.5, -230, 0.18, 0)
-panel.BackgroundColor3 = Color3.fromRGB(24, 31, 50)
-panel.BackgroundTransparency = 0.08
-panel.BorderSizePixel = 0
+panel.Size = UDim2.new(0.9, 0, 0.58, 0)
+panel.Position = UDim2.new(0.5, 0, 0.5, 0)
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+UITheme.ApplyPanel(panel, false)
 panel.Visible = false
 panel.Parent = gui
+
+local sizeConstraint = Instance.new("UISizeConstraint")
+sizeConstraint.MinSize = Vector2.new(320, 260)
+sizeConstraint.MaxSize = Vector2.new(700, 520)
+sizeConstraint.Parent = panel
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -12, 0, 30)
 title.Position = UDim2.new(0, 6, 0, 4)
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(245, 248, 255)
-title.TextScaled = true
+title.TextColor3 = UITheme.Colors.TextPrimary
 title.Font = Enum.Font.GothamBold
-title.Text = "Battle Pass (Press B)"
+title.Text = "Battle Pass"
 title.Parent = panel
+UITheme.ApplyResponsiveText(title, "title", true)
 
 local info = Instance.new("TextLabel")
 info.Size = UDim2.new(1, -12, 0, 20)
 info.Position = UDim2.new(0, 6, 0, 34)
 info.BackgroundTransparency = 1
 info.TextXAlignment = Enum.TextXAlignment.Left
-info.TextColor3 = Color3.fromRGB(255, 230, 176)
-info.TextSize = 14
+info.TextColor3 = UITheme.Colors.AccentGold
 info.Text = ""
 info.Parent = panel
+UITheme.ApplyResponsiveText(info, "small", false)
 
 local list = Instance.new("ScrollingFrame")
 list.Size = UDim2.new(1, -12, 1, -62)
 list.Position = UDim2.new(0, 6, 0, 56)
-list.BackgroundColor3 = Color3.fromRGB(12, 18, 31)
+list.BackgroundColor3 = UITheme.Colors.PanelDeep
 list.BackgroundTransparency = 0.2
 list.BorderSizePixel = 0
 list.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -116,7 +122,7 @@ local function refresh()
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, -10, 0, 64)
 		row.Position = UDim2.new(0, 5, 0, y)
-		row.BackgroundColor3 = Color3.fromRGB(31, 45, 73)
+		row.BackgroundColor3 = UITheme.Colors.PanelSoft
 		row.BorderSizePixel = 0
 		row.Parent = list
 
@@ -126,8 +132,8 @@ local function refresh()
 		desc.BackgroundTransparency = 1
 		desc.TextXAlignment = Enum.TextXAlignment.Left
 		desc.TextYAlignment = Enum.TextYAlignment.Top
-		desc.TextColor3 = Color3.fromRGB(226, 236, 255)
-		desc.TextSize = 13
+		desc.TextColor3 = UITheme.Colors.TextSecondary
+		desc.TextSize = UITheme.GetTextSize("small")
 		desc.Text = string.format("Tier %d (Req %d)\nFree: %s\nPremium: %s", tier.id, tier.points_required or 0, rewardToText(tier.free_reward), rewardToText(tier.premium_reward))
 		desc.Parent = row
 
@@ -166,14 +172,37 @@ local function refresh()
 	list.CanvasSize = UDim2.new(0, 0, 0, y + 8)
 end
 
+local function togglePanel()
+	panel.Visible = not panel.Visible
+	if panel.Visible then
+		refresh()
+	end
+end
+
+local function applySafeArea()
+	local fn = _G.AuraApplySafeArea
+	if fn then
+		fn(panel, { top = true, left = true, right = true, bottom = true })
+	end
+end
+
+local function registerPanel()
+	local register = _G.AuraRegisterPanel
+	if register then
+		register("battlepass", "Pass", togglePanel, function()
+			return panel.Visible
+		end)
+	end
+end
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.B then
-		panel.Visible = not panel.Visible
-		if panel.Visible then
-			refresh()
-		end
+		togglePanel()
 	end
 end)
+
+applySafeArea()
+registerPanel()

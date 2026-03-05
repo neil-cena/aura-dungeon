@@ -17,6 +17,7 @@ local DungeonConfig = require(ReplicatedStorage.shared.config.DungeonConfig)
 local DungeonTierCatalog = require(ReplicatedStorage.shared.config.DungeonTierCatalog)
 local PolishConfig = require(ReplicatedStorage.shared.config.PolishConfig)
 local PolishTypes = require(ReplicatedStorage.shared.types.PolishTypes)
+local UITheme = require(ReplicatedStorage.shared.config.UITheme)
 local interactionRemotes = ReplicatedStorage:WaitForChild("InteractionRemotes")
 local showDungeonPanel = interactionRemotes:WaitForChild("ShowDungeonPanel")
 local combatRemotes = ReplicatedStorage:WaitForChild("CombatRemotes")
@@ -31,9 +32,7 @@ local frame = Instance.new("Frame")
 frame.AnchorPoint = PolishConfig.ThumbLayout.ActionPanel.AnchorPoint
 frame.Size = UDim2.new(PolishConfig.ThumbLayout.ActionPanel.SizeScale.X, 0, PolishConfig.ThumbLayout.ActionPanel.SizeScale.Y, 0)
 frame.Position = UDim2.new(PolishConfig.ThumbLayout.ActionPanel.PositionScale.X, 0, PolishConfig.ThumbLayout.ActionPanel.PositionScale.Y, 0)
-frame.BackgroundColor3 = Color3.fromRGB(22, 30, 40)
-frame.BackgroundTransparency = 0.18
-frame.BorderSizePixel = 0
+UITheme.ApplyPanel(frame, false)
 frame.Visible = false
 frame.Parent = gui
 
@@ -42,7 +41,7 @@ title.Size = UDim2.new(1, -12, 0, 22)
 title.Position = UDim2.new(0, 6, 0, 3)
 title.BackgroundTransparency = 1
 title.Text = "Dungeon Run"
-title.TextColor3 = Color3.new(1, 1, 1)
+title.TextColor3 = UITheme.Colors.TextPrimary
 title.TextSize = 15
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = frame
@@ -50,7 +49,7 @@ title.Parent = frame
 local muteButton = Instance.new("TextButton")
 muteButton.Size = UDim2.new(0.42, 0, 0.10, 0)
 muteButton.Position = UDim2.new(0.56, 0, 0.02, 0)
-muteButton.BackgroundColor3 = Color3.fromRGB(95, 75, 45)
+muteButton.BackgroundColor3 = UITheme.Colors.PanelSoft
 muteButton.TextColor3 = Color3.new(1, 1, 1)
 muteButton.TextSize = 11
 muteButton.Text = "Mute cues: off"
@@ -61,7 +60,7 @@ statusLabel.Size = UDim2.new(1, -12, 0, 18)
 statusLabel.Position = UDim2.new(0, 6, 0, 24)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = "Status: idle"
-statusLabel.TextColor3 = Color3.new(1, 1, 1)
+statusLabel.TextColor3 = UITheme.Colors.TextSecondary
 statusLabel.TextSize = 12
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = frame
@@ -71,7 +70,7 @@ timerLabel.Size = UDim2.new(1, -12, 0, 18)
 timerLabel.Position = UDim2.new(0, 6, 0, 42)
 timerLabel.BackgroundTransparency = 1
 timerLabel.Text = "Runtime: 0.0s"
-timerLabel.TextColor3 = Color3.new(0.9, 0.95, 1)
+timerLabel.TextColor3 = UITheme.Colors.TextSecondary
 timerLabel.TextSize = 12
 timerLabel.TextXAlignment = Enum.TextXAlignment.Left
 timerLabel.Parent = frame
@@ -113,7 +112,7 @@ qualityLabel.Parent = frame
 local tierButton = Instance.new("TextButton")
 tierButton.Size = UDim2.new(0.42, 0, 0.10, 0)
 tierButton.Position = UDim2.new(0.12, 0, 0.02, 0)
-tierButton.BackgroundColor3 = Color3.fromRGB(62, 92, 148)
+tierButton.BackgroundColor3 = UITheme.Colors.AccentBlue
 tierButton.TextColor3 = Color3.new(1, 1, 1)
 tierButton.TextSize = 11
 tierButton.Text = "Tier: Beginner"
@@ -132,7 +131,7 @@ mainButton.Position = UDim2.new(
 	PolishConfig.ThumbLayout.CoreButtons.Main.PositionScale.Y,
 	0
 )
-mainButton.BackgroundColor3 = Color3.fromRGB(60, 120, 190)
+mainButton.BackgroundColor3 = UITheme.Colors.AccentBlue
 mainButton.Text = "Start Run"
 mainButton.TextColor3 = Color3.new(1, 1, 1)
 mainButton.TextSize = 14
@@ -151,7 +150,7 @@ winButton.Position = UDim2.new(
 	PolishConfig.ThumbLayout.CoreButtons.Win.PositionScale.Y,
 	0
 )
-winButton.BackgroundColor3 = Color3.fromRGB(52, 140, 84)
+winButton.BackgroundColor3 = UITheme.Colors.Success
 winButton.Text = "Resolve Win"
 winButton.TextColor3 = Color3.new(1, 1, 1)
 winButton.TextSize = 13
@@ -171,7 +170,7 @@ lossButton.Position = UDim2.new(
 	PolishConfig.ThumbLayout.CoreButtons.Loss.PositionScale.Y,
 	0
 )
-lossButton.BackgroundColor3 = Color3.fromRGB(154, 80, 62)
+lossButton.BackgroundColor3 = UITheme.Colors.Danger
 lossButton.Text = "Resolve Loss"
 lossButton.TextColor3 = Color3.new(1, 1, 1)
 lossButton.TextSize = 13
@@ -346,7 +345,13 @@ lossButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-RunService.Heartbeat:Connect(function()
+local timerAccum = 0
+RunService.Heartbeat:Connect(function(dt)
+	timerAccum += dt
+	if timerAccum < 0.2 then
+		return
+	end
+	timerAccum = 0
 	local state = getState()
 	if state.status == DungeonConfig.Status.Wave or state.status == DungeonConfig.Status.Boss then
 		local runtime = tonumber(state.runtime_seconds or 0)

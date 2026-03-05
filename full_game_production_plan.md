@@ -203,6 +203,7 @@ Every visual asset (maps, characters, auras, weapons, UI themes) will be referen
 - Add sound effects: roll anticipation drum, rarity reveal (different per tier), combat hit/slash, boss telegraph warning, boss death, level up jingle, UI click
 - All sound IDs in `AssetCatalog.lua` for easy swap
 - Particle effects: aura particles per rarity tier (from `AuraCatalog`), hit sparks, enemy death burst, boss telegraph ground circle, reward coin shower
+- Anime-neon beauty pass applied: shared `UITheme` + rarity presentation modules, model fallback pipeline (`VisualFactory`), upgraded hub/dungeon accents, and polished display-name catalogs for aura/weapon UI
 
 ### P4.5 -- Mobile UX Final Pass
 

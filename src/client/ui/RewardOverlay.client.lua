@@ -11,6 +11,9 @@ if not player then
 	return
 end
 
+local shared = ReplicatedStorage:WaitForChild("shared")
+local UITheme = require(shared.config.UITheme)
+
 local dungeonRemotes = ReplicatedStorage:WaitForChild("DungeonRemotes")
 local dungeonUpdate = dungeonRemotes:WaitForChild("DungeonUpdate")
 
@@ -32,8 +35,7 @@ local card = Instance.new("Frame")
 card.Name = "Card"
 card.Size = UDim2.new(0.36, 0, 0.28, 0)
 card.Position = UDim2.new(0.32, 0, 0.34, 0)
-card.BackgroundColor3 = Color3.fromRGB(24, 34, 52)
-card.BorderSizePixel = 0
+UITheme.ApplyPanel(card, false)
 card.Parent = dim
 
 local title = Instance.new("TextLabel")
@@ -42,7 +44,7 @@ title.Position = UDim2.new(0, 10, 0, 10)
 title.BackgroundTransparency = 1
 title.Text = "Run Complete"
 title.TextScaled = true
-title.TextColor3 = Color3.fromRGB(255, 247, 196)
+title.TextColor3 = UITheme.Colors.AccentGold
 title.Font = Enum.Font.GothamBold
 title.Parent = card
 
@@ -53,14 +55,14 @@ body.BackgroundTransparency = 1
 body.TextWrapped = true
 body.Text = "Reward: +0 Coins, +0 Tokens"
 body.TextScaled = true
-body.TextColor3 = Color3.fromRGB(222, 234, 255)
+body.TextColor3 = UITheme.Colors.TextSecondary
 body.Font = Enum.Font.Gotham
 body.Parent = card
 
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0.7, 0, 0, 38)
 closeButton.Position = UDim2.new(0.15, 0, 1, -50)
-closeButton.BackgroundColor3 = Color3.fromRGB(68, 130, 236)
+closeButton.BackgroundColor3 = UITheme.Colors.AccentBlue
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.TextScaled = true
 closeButton.Text = "Continue"

@@ -77,14 +77,17 @@ end
 local function updateUI()
 	local state = getState()
 	if not state then
-		frame.Visible = true
-		label.Text = "Loading..."
-		button.Text = "Tap when ready"
+		frame.Visible = false
 		return
 	end
 
 	local step = state.current_step or OnboardingConfig.Step.Spawned
-	if tutorialDismissed and (step == OnboardingConfig.Step.Rewarded or step == OnboardingConfig.Step.ReturnedHub) then
+	if step == OnboardingConfig.Step.Rewarded or step == OnboardingConfig.Step.ReturnedHub then
+		tutorialDismissed = true
+		frame.Visible = false
+		return
+	end
+	if tutorialDismissed then
 		frame.Visible = false
 		return
 	end
@@ -114,6 +117,7 @@ local function updateUI()
 		end
 		button.Text = "Done"
 	else
+		tutorialDismissed = true
 		frame.Visible = false
 	end
 end

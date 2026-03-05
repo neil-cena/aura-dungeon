@@ -69,6 +69,13 @@ local function isCombatState()
 	return state and (state.status == "wave" or state.status == "boss")
 end
 
+local function tryRefreshDungeonState()
+	local actions = _G.Day4DungeonActions
+	if actions and actions.refreshState then
+		actions.refreshState()
+	end
+end
+
 attackButton.MouseButton1Click:Connect(function()
 	play((AssetCatalog.Sounds or {}).UiClick)
 	local base = attackButton.BackgroundColor3
@@ -117,8 +124,15 @@ combatUpdate.OnClientEvent:Connect(function(payload)
 end)
 
 task.spawn(function()
+	local nextRefreshAt = 0
 	while true do
-		attackButton.Visible = isCombatState()
-		task.wait(0.15)
+		local now = os.clock()
+		local inCombat = isCombatState()
+		if now >= nextRefreshAt then
+			nextRefreshAt = now + (inCombat and 2.5 or 6.0)
+			tryRefreshDungeonState()
+		end
+		attackButton.Visible = inCombat
+		task.wait(0.25)
 	end
 end)

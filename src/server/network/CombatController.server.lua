@@ -55,6 +55,47 @@ local function handleAutoProgression(player, playerId, hit)
 		return out
 	end
 
+	local targetWasBoss = tostring(hit.target_name or "") == "Boss"
+
+	if targetWasBoss or state.status == DungeonConfig.Status.Boss then
+		local resultsByMember = {}
+		local fallbackResult = nil
+		for _, memberId in ipairs(memberIds) do
+			local result, completeErr = RiftService.CompleteDungeonRun(memberId, true)
+			if not result and completeErr ~= "run already ended" then
+				Remotes.DungeonUpdate:FireClient(player, { success = false, err = completeErr or "auto_complete_failed" })
+				return
+			end
+			if result then
+				resultsByMember[memberId] = result
+				if not fallbackResult then
+					fallbackResult = result
+				end
+			end
+		end
+		if not fallbackResult then
+			-- Idempotent safety: if another path already completed the run,
+			-- still drive clients back to a non-combat status.
+			fallbackResult = { status = DungeonConfig.Status.Won, outcome = "win" }
+		end
+		for _, memberPlayer in ipairs(getMemberPlayers()) do
+			local memberId = tostring(memberPlayer.UserId)
+			Remotes.DungeonUpdate:FireClient(memberPlayer, {
+				success = true,
+				action = "run_completed",
+				result = resultsByMember[memberId] or resultsByMember[playerId] or fallbackResult,
+				server_sent_at = os.clock(),
+			})
+		end
+		EnemyService.Reset(instanceOwnerId)
+		task.delay(0.2, function()
+			for _, memberPlayer in ipairs(getMemberPlayers()) do
+				teleportToHub(memberPlayer)
+			end
+		end)
+		return
+	end
+
 	if state.status == DungeonConfig.Status.Wave then
 		local statesByMember = {}
 		for _, memberId in ipairs(memberIds) do
@@ -87,32 +128,7 @@ local function handleAutoProgression(player, playerId, hit)
 		return
 	end
 
-	if state.status == DungeonConfig.Status.Boss then
-		local resultsByMember = {}
-		for _, memberId in ipairs(memberIds) do
-			local result, completeErr = RiftService.CompleteDungeonRun(memberId, true)
-			if not result then
-				Remotes.DungeonUpdate:FireClient(player, { success = false, err = completeErr or "auto_complete_failed" })
-				return
-			end
-			resultsByMember[memberId] = result
-		end
-		for _, memberPlayer in ipairs(getMemberPlayers()) do
-			local memberId = tostring(memberPlayer.UserId)
-			Remotes.DungeonUpdate:FireClient(memberPlayer, {
-				success = true,
-				action = "run_completed",
-				result = resultsByMember[memberId] or resultsByMember[playerId],
-				server_sent_at = os.clock(),
-			})
-		end
-		EnemyService.Reset(instanceOwnerId)
-		task.delay(0.2, function()
-			for _, memberPlayer in ipairs(getMemberPlayers()) do
-				teleportToHub(memberPlayer)
-			end
-		end)
-	end
+	-- Ignore any other status after a kill resolution edge-case.
 end
 
 Remotes.RequestAttack.OnServerEvent:Connect(function(player)

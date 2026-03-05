@@ -8,21 +8,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local shared = ReplicatedStorage:WaitForChild("shared")
 local AuraCatalog = require(shared.config.AuraCatalog)
+local RarityPresentation = require(shared.config.RarityPresentation)
 
 local inventoryRemotes = ReplicatedStorage:WaitForChild("InventoryRemotes")
 local auraEquippedRemote = inventoryRemotes:FindFirstChild("AuraEquipped")
-
-local function rarityFromItemId(itemId)
-	local id = string.lower(itemId or "")
-	if id:find("_legendary_") then
-		return "Legendary"
-	elseif id:find("_epic_") then
-		return "Epic"
-	elseif id:find("_rare_") then
-		return "Rare"
-	end
-	return "Common"
-end
 
 local function clearAura(character)
 	local old = character:FindFirstChild("AuraAttachment")
@@ -39,7 +28,7 @@ local function applyAura(character, itemId)
 
 	clearAura(character)
 
-	local rarity = rarityFromItemId(itemId)
+	local rarity = RarityPresentation.FromItemId(itemId)
 	local cfg = AuraCatalog.RarityVfx[rarity] or AuraCatalog.RarityVfx.Common
 
 	local attachment = Instance.new("Attachment")

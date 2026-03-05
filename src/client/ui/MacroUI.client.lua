@@ -17,10 +17,20 @@ local getMacroSnapshot = macroRemotes and macroRemotes:FindFirstChild("GetMacroS
 
 local inventoryRemotes = ReplicatedStorage:WaitForChild("InventoryRemotes")
 local getInventory = inventoryRemotes:WaitForChild("GetInventory")
+local inventoryUpdate = inventoryRemotes:WaitForChild("InventoryUpdate")
 local dungeonRemotes = ReplicatedStorage:WaitForChild("DungeonRemotes")
 local getDungeonState = dungeonRemotes:WaitForChild("GetDungeonState")
+local dungeonUpdate = dungeonRemotes:WaitForChild("DungeonUpdate")
 local onboardingRemotes = ReplicatedStorage:WaitForChild("OnboardingRemotes")
 local getOnboardingState = onboardingRemotes:WaitForChild("GetOnboardingState")
+local onboardingResult = onboardingRemotes:WaitForChild("OnboardingResult")
+local rollRemotes = ReplicatedStorage:WaitForChild("RollRemotes")
+local rollResult = rollRemotes:WaitForChild("RollResult")
+local shared = ReplicatedStorage:WaitForChild("shared")
+local UITheme = require(shared.config.UITheme)
+local UIText = require(shared.config.UIText)
+local AuraDisplayCatalog = require(shared.config.AuraDisplayCatalog)
+local WeaponDisplayCatalog = require(shared.config.WeaponDisplayCatalog)
 
 local function computeFallbackProgression(inv)
 	local prog = inv.progression or {}
@@ -48,7 +58,7 @@ local function fallbackObjective(onboardingState, dungeonState)
 	if dStatus == "wave" or dStatus == "boss" then
 		return string.format("Complete dungeon run (%s)", tostring(dStatus))
 	end
-	return "Roll -> Equip -> Enter Rift"
+	return UIText.Macro.DefaultObjective
 end
 
 local function readState()
@@ -90,86 +100,97 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local hud = Instance.new("Frame")
-hud.Size = UDim2.new(0.64, 0, 0, 64)
-hud.Position = UDim2.new(0.18, 0, 0.01, 0)
-hud.BackgroundColor3 = Color3.fromRGB(20, 28, 40)
-hud.BackgroundTransparency = 0.1
-hud.BorderSizePixel = 0
+hud.Size = UDim2.new(0.5, 0, 0, 44)
+hud.Position = UDim2.new(0.25, 0, 0.01, 0)
+UITheme.ApplyPanel(hud, false)
 hud.Parent = gui
 
 local hudText = Instance.new("TextLabel")
-hudText.Size = UDim2.new(1, -12, 0, 30)
-hudText.Position = UDim2.new(0, 6, 0, 2)
+hudText.Size = UDim2.new(1, -10, 0, 18)
+hudText.Position = UDim2.new(0, 5, 0, 3)
 hudText.BackgroundTransparency = 1
 hudText.TextXAlignment = Enum.TextXAlignment.Left
 hudText.TextYAlignment = Enum.TextYAlignment.Center
-hudText.TextColor3 = Color3.fromRGB(236, 242, 255)
-hudText.TextScaled = true
-hudText.Text = "Coins: - | Tokens: - | Lv -"
+hudText.TextColor3 = UITheme.Colors.TextPrimary
+hudText.TextSize = UITheme.GetTextSize("small")
+hudText.Text = "C: - | T: - | Lv -"
 hudText.Parent = hud
 
 local xpLabel = Instance.new("TextLabel")
-xpLabel.Size = UDim2.new(1, -12, 0, 14)
-xpLabel.Position = UDim2.new(0, 6, 0, 32)
+xpLabel.Size = UDim2.new(1, -10, 0, 12)
+xpLabel.Position = UDim2.new(0, 5, 0, 20)
 xpLabel.BackgroundTransparency = 1
 xpLabel.TextXAlignment = Enum.TextXAlignment.Left
 xpLabel.TextYAlignment = Enum.TextYAlignment.Center
-xpLabel.TextColor3 = Color3.fromRGB(208, 220, 255)
-xpLabel.TextSize = 12
+xpLabel.TextColor3 = UITheme.Colors.TextSecondary
+xpLabel.TextSize = UITheme.GetTextSize("small")
 xpLabel.Text = "XP: - / -"
 xpLabel.Parent = hud
 
 local xpBarBg = Instance.new("Frame")
-xpBarBg.Size = UDim2.new(1, -12, 0, 10)
-xpBarBg.Position = UDim2.new(0, 6, 0, 50)
-xpBarBg.BackgroundColor3 = Color3.fromRGB(50, 58, 78)
+xpBarBg.Size = UDim2.new(1, -10, 0, 6)
+xpBarBg.Position = UDim2.new(0, 5, 0, 35)
+xpBarBg.BackgroundColor3 = UITheme.Colors.PanelSoft
 xpBarBg.BorderSizePixel = 0
 xpBarBg.Parent = hud
 
 local xpBarFill = Instance.new("Frame")
 xpBarFill.Size = UDim2.new(0, 0, 1, 0)
 xpBarFill.Position = UDim2.new(0, 0, 0, 0)
-xpBarFill.BackgroundColor3 = Color3.fromRGB(110, 174, 255)
+xpBarFill.BackgroundColor3 = UITheme.Colors.AccentBlue
 xpBarFill.BorderSizePixel = 0
 xpBarFill.Parent = xpBarBg
 
 local objective = Instance.new("TextLabel")
-objective.Size = UDim2.new(0.64, 0, 0, 30)
-objective.Position = UDim2.new(0.18, 0, 0.065, 0)
-objective.BackgroundColor3 = Color3.fromRGB(39, 54, 82)
+objective.Size = UDim2.new(0.5, 0, 0, 18)
+objective.Position = UDim2.new(0.25, 0, 0.055, 0)
+objective.BackgroundColor3 = UITheme.Colors.PanelSoft
 objective.BackgroundTransparency = 0.2
 objective.BorderSizePixel = 0
-objective.TextColor3 = Color3.fromRGB(255, 240, 196)
-objective.TextScaled = true
-objective.Text = "Objective: -"
+objective.TextColor3 = UITheme.Colors.AccentGold
+objective.TextSize = UITheme.GetTextSize("small")
+objective.TextXAlignment = Enum.TextXAlignment.Left
+objective.Text = "Obj: -"
 objective.Parent = gui
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.new(0.46, 0, 0.5, 0)
-panel.Position = UDim2.new(0.27, 0, 0.15, 0)
-panel.BackgroundColor3 = Color3.fromRGB(16, 21, 33)
-panel.BackgroundTransparency = 0.08
-panel.BorderSizePixel = 0
+panel.Size = UDim2.new(0.88, 0, 0.68, 0)
+panel.Position = UDim2.new(0.5, 0, 0.52, 0)
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+UITheme.ApplyPanel(panel, true)
 panel.Visible = false
 panel.Parent = gui
+
+local panelSizeConstraint = Instance.new("UISizeConstraint")
+panelSizeConstraint.MinSize = Vector2.new(320, 280)
+panelSizeConstraint.MaxSize = Vector2.new(860, 620)
+panelSizeConstraint.Parent = panel
+
+local function applySafeArea()
+	local fn = _G.AuraApplySafeArea
+	if fn then
+		fn(hud, { top = true, left = true, right = true })
+		fn(objective, { top = true, left = true, right = true })
+	end
+end
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -12, 0, 32)
 title.Position = UDim2.new(0, 6, 0, 6)
 title.BackgroundTransparency = 1
 title.Text = "Macro Panel"
-title.TextScaled = true
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextColor3 = UITheme.Colors.TextPrimary
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Font = Enum.Font.GothamBold
 title.Parent = panel
+UITheme.ApplyResponsiveText(title, "title", true)
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 34, 0, 28)
 closeBtn.Position = UDim2.new(1, -40, 0, 8)
 closeBtn.BackgroundColor3 = Color3.fromRGB(62, 70, 92)
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextScaled = true
+closeBtn.TextSize = UITheme.GetTextSize("body")
 closeBtn.Text = "X"
 closeBtn.Parent = panel
 
@@ -183,8 +204,8 @@ local tabLoop = Instance.new("TextButton")
 tabLoop.Size = UDim2.new(0.32, 0, 1, 0)
 tabLoop.Position = UDim2.new(0, 0, 0, 0)
 tabLoop.Text = "Loop"
-tabLoop.TextScaled = true
-tabLoop.BackgroundColor3 = Color3.fromRGB(72, 121, 214)
+tabLoop.TextSize = UITheme.GetTextSize("body")
+tabLoop.BackgroundColor3 = UITheme.Colors.AccentBlue
 tabLoop.TextColor3 = Color3.fromRGB(255, 255, 255)
 tabLoop.Parent = tabs
 
@@ -192,7 +213,7 @@ local tabProg = Instance.new("TextButton")
 tabProg.Size = UDim2.new(0.32, 0, 1, 0)
 tabProg.Position = UDim2.new(0.34, 0, 0, 0)
 tabProg.Text = "Progression"
-tabProg.TextScaled = true
+tabProg.TextSize = UITheme.GetTextSize("body")
 tabProg.BackgroundColor3 = Color3.fromRGB(53, 70, 104)
 tabProg.TextColor3 = Color3.fromRGB(255, 255, 255)
 tabProg.Parent = tabs
@@ -201,7 +222,7 @@ local tabEco = Instance.new("TextButton")
 tabEco.Size = UDim2.new(0.32, 0, 1, 0)
 tabEco.Position = UDim2.new(0.68, 0, 0, 0)
 tabEco.Text = "Economy"
-tabEco.TextScaled = true
+tabEco.TextSize = UITheme.GetTextSize("body")
 tabEco.BackgroundColor3 = Color3.fromRGB(53, 70, 104)
 tabEco.TextColor3 = Color3.fromRGB(255, 255, 255)
 tabEco.Parent = tabs
@@ -209,28 +230,31 @@ tabEco.Parent = tabs
 local content = Instance.new("TextLabel")
 content.Size = UDim2.new(1, -12, 1, -88)
 content.Position = UDim2.new(0, 6, 0, 82)
-content.BackgroundColor3 = Color3.fromRGB(24, 31, 48)
+content.BackgroundColor3 = UITheme.Colors.PanelSoft
 content.BackgroundTransparency = 0.25
 content.BorderSizePixel = 0
 content.TextWrapped = true
 content.TextYAlignment = Enum.TextYAlignment.Top
 content.TextXAlignment = Enum.TextXAlignment.Left
 content.TextScaled = false
-content.TextSize = 16
-content.TextColor3 = Color3.fromRGB(225, 234, 255)
+content.TextSize = UITheme.GetTextSize("body")
+content.TextColor3 = UITheme.Colors.TextSecondary
 content.Text = ""
 content.Parent = panel
 
 local activeTab = "loop"
 local lastSnapshot = nil
+local refreshRequested = true
 
 local function renderLoop(snapshot)
 	local eq = snapshot.equipped or {}
+	local auraName = eq.aura and AuraDisplayCatalog.GetDisplay(eq.aura).name or UIText.Common.NoneEquipped
+	local weaponName = eq.weapon and WeaponDisplayCatalog.GetDisplay(eq.weapon).name or UIText.Common.NoneEquipped
 	return string.format(
 		"Main Loop\n\n1) Roll at station\n2) Equip in loadout\n3) Enter rift\n4) Complete run and repeat\n\nCurrent Objective:\n%s\n\nEquipped\nAura: %s\nWeapon: %s",
 		tostring(snapshot.objective or "-"),
-		tostring(eq.aura or "none"),
-		tostring(eq.weapon or "none")
+		tostring(auraName),
+		tostring(weaponName)
 	)
 end
 
@@ -278,14 +302,11 @@ local function render()
 	end
 	local curr = lastSnapshot.currencies or {}
 	local prog = lastSnapshot.progression or {}
-	local eq = lastSnapshot.equipped or {}
 	hudText.Text = string.format(
-		"Coins: %d | Tokens: %d | Level: %d | Aura: %s | Weapon: %s",
+		"C:%d | T:%d | Lv:%d",
 		tonumber(curr.coins or 0),
 		tonumber(curr.tokens or 0),
-		tonumber(prog.level or 1),
-		tostring(eq.aura or "none"),
-		tostring(eq.weapon or "none")
+		tonumber(prog.level or 1)
 	)
 	local xpNow = tonumber(prog.xp_in_level or 0)
 	local xpCap = math.max(1, tonumber(prog.xp_in_level_cap or 250))
@@ -297,7 +318,7 @@ local function render()
 		objective.Visible = false
 	else
 		objective.Visible = true
-		objective.Text = "Objective: " .. tostring(lastSnapshot.objective or "-")
+		objective.Text = "Obj: " .. tostring(lastSnapshot.objective or "-")
 	end
 
 	if activeTab == "loop" then
@@ -309,11 +330,15 @@ local function render()
 	end
 end
 
+local function requestRefresh()
+	refreshRequested = true
+end
+
 local function setTab(tabId)
 	activeTab = tabId
-	tabLoop.BackgroundColor3 = tabId == "loop" and Color3.fromRGB(72, 121, 214) or Color3.fromRGB(53, 70, 104)
-	tabProg.BackgroundColor3 = tabId == "progression" and Color3.fromRGB(72, 121, 214) or Color3.fromRGB(53, 70, 104)
-	tabEco.BackgroundColor3 = tabId == "economy" and Color3.fromRGB(72, 121, 214) or Color3.fromRGB(53, 70, 104)
+	tabLoop.BackgroundColor3 = tabId == "loop" and UITheme.Colors.AccentBlue or UITheme.Colors.PanelSoft
+	tabProg.BackgroundColor3 = tabId == "progression" and UITheme.Colors.AccentBlue or UITheme.Colors.PanelSoft
+	tabEco.BackgroundColor3 = tabId == "economy" and UITheme.Colors.AccentBlue or UITheme.Colors.PanelSoft
 	render()
 end
 
@@ -330,22 +355,53 @@ closeBtn.MouseButton1Click:Connect(function()
 	panel.Visible = false
 end)
 
+local function togglePanel()
+	panel.Visible = not panel.Visible
+	render()
+end
+
+local function registerPanel()
+	local register = _G.AuraRegisterPanel
+	if register then
+		register("macro", "Macro", togglePanel, function()
+			return panel.Visible
+		end)
+	end
+end
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.Tab then
-		panel.Visible = not panel.Visible
-		render()
+		togglePanel()
 	end
 end)
 
 task.spawn(function()
 	while true do
-		lastSnapshot = readState()
-		render()
-		task.wait(0.9)
+		if refreshRequested then
+			lastSnapshot = readState()
+			render()
+			refreshRequested = false
+		end
+		task.wait(0.25)
+	end
+end)
+
+-- Event-driven updates with throttled polling fallback.
+inventoryUpdate.OnClientEvent:Connect(requestRefresh)
+dungeonUpdate.OnClientEvent:Connect(requestRefresh)
+onboardingResult.OnClientEvent:Connect(requestRefresh)
+rollResult.OnClientEvent:Connect(requestRefresh)
+
+task.spawn(function()
+	while true do
+		requestRefresh()
+		task.wait(3.0)
 	end
 end)
 
 setTab("loop")
+applySafeArea()
+registerPanel()

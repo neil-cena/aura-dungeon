@@ -14,11 +14,30 @@ local combatUpdate = combatRemotes:WaitForChild("CombatUpdate")
 
 local activeBars = {}
 
-local function ensureBar(enemyPart)
-	if activeBars[enemyPart] then
+local function resolveVisualPart(enemyInstance)
+	if enemyInstance:IsA("BasePart") then
+		return enemyInstance
+	end
+	if enemyInstance:IsA("Model") then
+		if enemyInstance.PrimaryPart then
+			return enemyInstance.PrimaryPart
+		end
+		for _, d in ipairs(enemyInstance:GetDescendants()) do
+			if d:IsA("BasePart") then
+				enemyInstance.PrimaryPart = d
+				return d
+			end
+		end
+	end
+	return nil
+end
+
+local function ensureBar(enemyInstance)
+	if activeBars[enemyInstance] then
 		return
 	end
-	if not enemyPart:IsA("BasePart") then
+	local enemyPart = resolveVisualPart(enemyInstance)
+	if not enemyPart or not enemyPart:IsA("BasePart") then
 		return
 	end
 
@@ -51,16 +70,25 @@ local function ensureBar(enemyPart)
 	nameLabel.TextStrokeTransparency = 0.25
 	nameLabel.TextScaled = true
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.Text = enemyPart:GetAttribute("EnemyIsBoss") and "Boss" or "Enemy"
+	nameLabel.Text = tostring(enemyPart:GetAttribute("EnemyDisplayName") or (enemyPart:GetAttribute("EnemyIsBoss") and "Boss" or "Enemy"))
 	nameLabel.Parent = billboard
 
-	activeBars[enemyPart] = billboard
+	activeBars[enemyInstance] = { billboard = billboard, part = enemyPart }
 end
 
-local function updateBar(enemyPart)
-	local bar = activeBars[enemyPart]
+local function updateBar(enemyInstance)
+	local rec = activeBars[enemyInstance]
+	local bar = rec and rec.billboard
 	if not bar then
 		return
+	end
+	local enemyPart = rec.part
+	if not enemyPart or not enemyPart.Parent then
+		enemyPart = resolveVisualPart(enemyInstance)
+		if not enemyPart then
+			return
+		end
+		rec.part = enemyPart
 	end
 	local bg = bar:FindFirstChildOfClass("Frame")
 	local fill = bg and bg:FindFirstChild("Fill")
@@ -76,11 +104,11 @@ local function updateBar(enemyPart)
 	fill.Size = UDim2.new(ratio, 0, 1, 0)
 end
 
-local function destroyBar(enemyPart)
-	local bar = activeBars[enemyPart]
-	if bar then
-		bar:Destroy()
-		activeBars[enemyPart] = nil
+local function destroyBar(enemyInstance)
+	local rec = activeBars[enemyInstance]
+	if rec and rec.billboard then
+		rec.billboard:Destroy()
+		activeBars[enemyInstance] = nil
 	end
 end
 
@@ -124,9 +152,9 @@ local function createDamagePop(position, text, color)
 	Debris:AddItem(marker, 1.5)
 end
 
-for _, enemy in ipairs(CollectionService:GetTagged("AuraEnemy")) do
-	ensureBar(enemy)
-	updateBar(enemy)
+for _, enemyInstance in ipairs(CollectionService:GetTagged("AuraEnemy")) do
+	ensureBar(enemyInstance)
+	updateBar(enemyInstance)
 end
 
 CollectionService:GetInstanceAddedSignal("AuraEnemy"):Connect(function(enemy)
@@ -163,11 +191,11 @@ end)
 
 task.spawn(function()
 	while true do
-		for enemyPart in pairs(activeBars) do
-			if enemyPart and enemyPart.Parent then
-				updateBar(enemyPart)
+		for enemyInstance in pairs(activeBars) do
+			if enemyInstance and enemyInstance.Parent then
+				updateBar(enemyInstance)
 			else
-				destroyBar(enemyPart)
+				destroyBar(enemyInstance)
 			end
 		end
 		task.wait(0.15)

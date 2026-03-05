@@ -16,6 +16,7 @@ local DungeonConfig = require(ReplicatedStorage.shared.config.DungeonConfig)
 
 local PHASE_COOLDOWN_SEC = 0.2
 local lastPhaseEvent = {}
+local deathResolveLockUntil = {}
 
 local function teleportCharacter(player, targetCFrame)
 	if not player or not targetCFrame then
@@ -40,6 +41,83 @@ local function getPlayersFromIds(memberIds)
 		end
 	end
 	return out
+end
+
+local function completePartyRun(memberIds, instanceOwnerId, didWin)
+	local resultsByMember = {}
+	local fallbackResult = nil
+	for _, memberId in ipairs(memberIds) do
+		local result, err = RiftService.CompleteDungeonRun(memberId, didWin)
+		if not result and err ~= "run already ended" then
+			return nil, err or "complete_failed"
+		end
+		if result then
+			resultsByMember[memberId] = result
+			if not fallbackResult then
+				fallbackResult = result
+			end
+		end
+	end
+	if not fallbackResult then
+		fallbackResult = {
+			status = didWin and DungeonConfig.Status.Won or DungeonConfig.Status.Lost,
+			outcome = didWin and "win" or "loss",
+		}
+	end
+	for _, memberPlayer in ipairs(getPlayersFromIds(memberIds)) do
+		local memberId = tostring(memberPlayer.UserId)
+		Remotes.DungeonUpdate:FireClient(memberPlayer, {
+			success = true,
+			action = "run_completed",
+			result = resultsByMember[memberId] or fallbackResult,
+			server_sent_at = os.clock(),
+		})
+	end
+	task.delay(0.2, function()
+		for _, memberPlayer in ipairs(getPlayersFromIds(memberIds)) do
+			teleportCharacter(memberPlayer, HubBuilder.GetHubSpawnCFrame())
+		end
+	end)
+	EnemyService.Reset(instanceOwnerId)
+	return true, nil
+end
+
+local function handleCharacterDied(player)
+	local playerId = tostring(player.UserId)
+	local state = RiftService.GetDungeonState(playerId)
+	if not state then
+		return
+	end
+	local status = state.status
+	if status ~= DungeonConfig.Status.Wave and status ~= DungeonConfig.Status.Boss then
+		return
+	end
+	local lockKey = tostring(state.instance_owner_id or playerId)
+	local now = os.clock()
+	if deathResolveLockUntil[lockKey] and now < deathResolveLockUntil[lockKey] then
+		return
+	end
+	deathResolveLockUntil[lockKey] = now + 0.6
+	local memberIds = state.party_member_ids or { playerId }
+	local instanceOwnerId = state.instance_owner_id or playerId
+	local ok = completePartyRun(memberIds, instanceOwnerId, false)
+	if not ok then
+		for _, memberPlayer in ipairs(getPlayersFromIds(memberIds)) do
+			Remotes.DungeonUpdate:FireClient(memberPlayer, { success = false, err = "death_resolution_failed" })
+		end
+	end
+end
+
+local function bindCharacter(player, character)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		humanoid = character:WaitForChild("Humanoid", 5)
+	end
+	if humanoid then
+		humanoid.Died:Connect(function()
+			handleCharacterDied(player)
+		end)
+	end
 end
 
 Remotes.GetDungeonState.OnServerInvoke = function(player)
@@ -118,6 +196,10 @@ Remotes.RequestAdvanceDungeonPhase.OnServerEvent:Connect(function(player, payloa
 		Remotes.DungeonUpdate:FireClient(player, { success = false, err = "only_leader_can_advance_party_phase" })
 		return
 	end
+	if preState and preState.status == DungeonConfig.Status.Boss then
+		Remotes.DungeonUpdate:FireClient(player, { success = false, err = "boss_phase_auto_resolves_on_boss_defeat" })
+		return
+	end
 
 	local state, err = RiftService.AdvanceDungeonPhase(playerId)
 	if not state then
@@ -168,30 +250,27 @@ Remotes.RequestCompleteDungeonRun.OnServerEvent:Connect(function(player, payload
 	end
 	local memberIds = state.party_member_ids or { playerId }
 	local instanceOwnerId = state.instance_owner_id or playerId
-	local resultsByMember = {}
-	for _, memberId in ipairs(memberIds) do
-		local result, err = RiftService.CompleteDungeonRun(memberId, didWin)
-		if not result then
-			Remotes.DungeonUpdate:FireClient(player, { success = false, err = err or "complete_failed" })
-			return
-		end
-		resultsByMember[memberId] = result
+	local ok, err = completePartyRun(memberIds, instanceOwnerId, didWin)
+	if not ok then
+		Remotes.DungeonUpdate:FireClient(player, { success = false, err = err or "complete_failed" })
 	end
-	for _, memberPlayer in ipairs(getPlayersFromIds(memberIds)) do
-		local memberId = tostring(memberPlayer.UserId)
-		Remotes.DungeonUpdate:FireClient(memberPlayer, {
-			success = true,
-			action = "run_completed",
-			result = resultsByMember[memberId] or resultsByMember[playerId],
-			server_sent_at = os.clock(),
-		})
-	end
-
-	task.delay(0.2, function()
-		for _, memberPlayer in ipairs(getPlayersFromIds(memberIds)) do
-			teleportCharacter(memberPlayer, HubBuilder.GetHubSpawnCFrame())
-		end
-	end)
-	EnemyService.Reset(instanceOwnerId)
 end)
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		bindCharacter(player, character)
+	end)
+	if player.Character then
+		bindCharacter(player, player.Character)
+	end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+	player.CharacterAdded:Connect(function(character)
+		bindCharacter(player, character)
+	end)
+	if player.Character then
+		bindCharacter(player, player.Character)
+	end
+end
 

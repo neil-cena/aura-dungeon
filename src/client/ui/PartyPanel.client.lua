@@ -19,6 +19,8 @@ local createOrGetParty = partyRemotes:WaitForChild("CreateOrGetParty")
 local inviteToParty = partyRemotes:WaitForChild("InviteToParty")
 local acceptPartyInvite = partyRemotes:WaitForChild("AcceptPartyInvite")
 local leaveParty = partyRemotes:WaitForChild("LeaveParty")
+local shared = ReplicatedStorage:WaitForChild("shared")
+local UITheme = require(shared.config.UITheme)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "PartyPanelGui"
@@ -26,35 +28,39 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.new(0, 340, 0, 250)
-panel.Position = UDim2.new(1, -352, 0.24, 0)
-panel.BackgroundColor3 = Color3.fromRGB(20, 30, 46)
-panel.BackgroundTransparency = 0.08
-panel.BorderSizePixel = 0
+panel.Size = UDim2.new(0.82, 0, 0.46, 0)
+panel.Position = UDim2.new(0.5, 0, 0.52, 0)
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+UITheme.ApplyPanel(panel, false)
 panel.Visible = false
 panel.Parent = gui
+
+local sizeConstraint = Instance.new("UISizeConstraint")
+sizeConstraint.MinSize = Vector2.new(300, 220)
+sizeConstraint.MaxSize = Vector2.new(560, 420)
+sizeConstraint.Parent = panel
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -10, 0, 30)
 title.Position = UDim2.new(0, 5, 0, 4)
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(245, 248, 255)
-title.TextScaled = true
+title.TextColor3 = UITheme.Colors.TextPrimary
 title.Font = Enum.Font.GothamBold
-title.Text = "Party (press P)"
+title.Text = "Party"
 title.Parent = panel
+UITheme.ApplyResponsiveText(title, "title", true)
 
 local membersLabel = Instance.new("TextLabel")
 membersLabel.Size = UDim2.new(1, -12, 0, 84)
 membersLabel.Position = UDim2.new(0, 6, 0, 38)
-membersLabel.BackgroundColor3 = Color3.fromRGB(12, 20, 32)
+membersLabel.BackgroundColor3 = UITheme.Colors.PanelDeep
 membersLabel.BackgroundTransparency = 0.2
 membersLabel.BorderSizePixel = 0
 membersLabel.TextXAlignment = Enum.TextXAlignment.Left
 membersLabel.TextYAlignment = Enum.TextYAlignment.Top
 membersLabel.TextWrapped = true
-membersLabel.TextSize = 14
-membersLabel.TextColor3 = Color3.fromRGB(216, 228, 255)
+membersLabel.TextSize = UITheme.GetTextSize("small")
+membersLabel.TextColor3 = UITheme.Colors.TextSecondary
 membersLabel.Text = "No party"
 membersLabel.Parent = panel
 
@@ -63,15 +69,15 @@ status.Size = UDim2.new(1, -12, 0, 20)
 status.Position = UDim2.new(0, 6, 0, 124)
 status.BackgroundTransparency = 1
 status.TextXAlignment = Enum.TextXAlignment.Left
-status.TextSize = 14
-status.TextColor3 = Color3.fromRGB(255, 233, 183)
+status.TextSize = UITheme.GetTextSize("small")
+status.TextColor3 = UITheme.Colors.AccentGold
 status.Text = ""
 status.Parent = panel
 
 local createBtn = Instance.new("TextButton")
 createBtn.Size = UDim2.new(0.47, 0, 0, 30)
 createBtn.Position = UDim2.new(0.02, 0, 0, 150)
-createBtn.BackgroundColor3 = Color3.fromRGB(60, 128, 214)
+createBtn.BackgroundColor3 = UITheme.Colors.AccentBlue
 createBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 createBtn.TextScaled = true
 createBtn.Text = "Create Party"
@@ -80,7 +86,7 @@ createBtn.Parent = panel
 local leaveBtn = Instance.new("TextButton")
 leaveBtn.Size = UDim2.new(0.47, 0, 0, 30)
 leaveBtn.Position = UDim2.new(0.51, 0, 0, 150)
-leaveBtn.BackgroundColor3 = Color3.fromRGB(140, 84, 84)
+leaveBtn.BackgroundColor3 = UITheme.Colors.Danger
 leaveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 leaveBtn.TextScaled = true
 leaveBtn.Text = "Leave Party"
@@ -89,7 +95,7 @@ leaveBtn.Parent = panel
 local inviteInput = Instance.new("TextBox")
 inviteInput.Size = UDim2.new(0.63, 0, 0, 30)
 inviteInput.Position = UDim2.new(0.02, 0, 0, 188)
-inviteInput.BackgroundColor3 = Color3.fromRGB(30, 42, 64)
+inviteInput.BackgroundColor3 = UITheme.Colors.PanelSoft
 inviteInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 inviteInput.PlaceholderText = "Target UserId"
 inviteInput.Text = ""
@@ -99,7 +105,7 @@ inviteInput.Parent = panel
 local inviteBtn = Instance.new("TextButton")
 inviteBtn.Size = UDim2.new(0.33, 0, 0, 30)
 inviteBtn.Position = UDim2.new(0.66, 0, 0, 188)
-inviteBtn.BackgroundColor3 = Color3.fromRGB(89, 136, 94)
+inviteBtn.BackgroundColor3 = UITheme.Colors.Success
 inviteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 inviteBtn.TextScaled = true
 inviteBtn.Text = "Invite"
@@ -108,7 +114,7 @@ inviteBtn.Parent = panel
 local acceptBtn = Instance.new("TextButton")
 acceptBtn.Size = UDim2.new(1, -12, 0, 26)
 acceptBtn.Position = UDim2.new(0, 6, 1, -32)
-acceptBtn.BackgroundColor3 = Color3.fromRGB(102, 154, 88)
+acceptBtn.BackgroundColor3 = UITheme.Colors.Success
 acceptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 acceptBtn.TextScaled = true
 acceptBtn.Text = "Accept Invite"
@@ -149,6 +155,29 @@ local function refresh()
 	end
 end
 
+local function togglePanel()
+	panel.Visible = not panel.Visible
+	if panel.Visible then
+		refresh()
+	end
+end
+
+local function applySafeArea()
+	local fn = _G.AuraApplySafeArea
+	if fn then
+		fn(panel, { top = true, right = true, bottom = true })
+	end
+end
+
+local function registerPanel()
+	local register = _G.AuraRegisterPanel
+	if register then
+		register("party", "Party", togglePanel, function()
+			return panel.Visible
+		end)
+	end
+end
+
 createBtn.MouseButton1Click:Connect(function()
 	local resp = createOrGetParty:InvokeServer()
 	status.Text = (resp and resp.success) and "Party ready." or ("Create failed: " .. tostring(resp and resp.err or "unknown"))
@@ -183,9 +212,9 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.P then
-		panel.Visible = not panel.Visible
-		if panel.Visible then
-			refresh()
-		end
+		togglePanel()
 	end
 end)
+
+applySafeArea()
+registerPanel()

@@ -15,6 +15,11 @@ end
 local shared = ReplicatedStorage:WaitForChild("shared")
 local RollConfig = require(shared.config.RollConfig)
 local AssetCatalog = require(shared.config.AssetCatalog)
+local UITheme = require(shared.config.UITheme)
+local RarityPresentation = require(shared.config.RarityPresentation)
+local UIText = require(shared.config.UIText)
+local AuraDisplayCatalog = require(shared.config.AuraDisplayCatalog)
+local WeaponDisplayCatalog = require(shared.config.WeaponDisplayCatalog)
 
 local rollRemotes = ReplicatedStorage:WaitForChild("RollRemotes")
 local inventoryRemotes = ReplicatedStorage:WaitForChild("InventoryRemotes")
@@ -37,8 +42,7 @@ local frame = Instance.new("Frame")
 frame.Name = "Panel"
 frame.Size = UDim2.new(0.42, 0, 0.48, 0)
 frame.Position = UDim2.new(0.29, 0, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(23, 30, 46)
-frame.BorderSizePixel = 0
+UITheme.ApplyPanel(frame, false)
 frame.Visible = false
 frame.Parent = gui
 
@@ -63,16 +67,16 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -12, 0, 28)
 title.Position = UDim2.new(0, 6, 0, 6)
 title.BackgroundTransparency = 1
-title.Text = "Aura Rolls"
+title.Text = UIText.Roll.Title
 title.TextSize = 18
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+UITheme.ApplyText(title, true)
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = frame
 
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 30, 0, 28)
 closeButton.Position = UDim2.new(1, -36, 0, 6)
-closeButton.BackgroundColor3 = Color3.fromRGB(62, 70, 92)
+closeButton.BackgroundColor3 = UITheme.Colors.PanelSoft
 closeButton.Text = "X"
 closeButton.TextSize = 16
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -84,14 +88,14 @@ currencyLabel.Position = UDim2.new(0, 6, 0, 40)
 currencyLabel.BackgroundTransparency = 1
 currencyLabel.Text = "Coins: - | Tokens: -"
 currencyLabel.TextSize = 14
-currencyLabel.TextColor3 = Color3.fromRGB(210, 222, 255)
+currencyLabel.TextColor3 = UITheme.Colors.TextSecondary
 currencyLabel.TextXAlignment = Enum.TextXAlignment.Left
 currencyLabel.Parent = frame
 
 local laneAuraBtn = Instance.new("TextButton")
 laneAuraBtn.Size = UDim2.new(0.46, 0, 0, 32)
 laneAuraBtn.Position = UDim2.new(0.04, 0, 0, 74)
-laneAuraBtn.BackgroundColor3 = Color3.fromRGB(79, 133, 255)
+laneAuraBtn.BackgroundColor3 = UITheme.Colors.AccentBlue
 laneAuraBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 laneAuraBtn.Text = "Roll Aura (100 Coins)"
 laneAuraBtn.TextSize = 13
@@ -100,7 +104,7 @@ laneAuraBtn.Parent = frame
 local laneWeaponBtn = Instance.new("TextButton")
 laneWeaponBtn.Size = UDim2.new(0.46, 0, 0, 32)
 laneWeaponBtn.Position = UDim2.new(0.5, 0, 0, 74)
-laneWeaponBtn.BackgroundColor3 = Color3.fromRGB(113, 92, 255)
+laneWeaponBtn.BackgroundColor3 = UITheme.Colors.AccentPink
 laneWeaponBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 laneWeaponBtn.Text = "Roll Weapon (50 Tokens)"
 laneWeaponBtn.TextSize = 13
@@ -111,9 +115,9 @@ resultLabel.Size = UDim2.new(1, -12, 0, 46)
 resultLabel.Position = UDim2.new(0, 6, 0, 114)
 resultLabel.BackgroundTransparency = 1
 resultLabel.TextWrapped = true
-resultLabel.Text = "Roll at the station to receive an item."
+resultLabel.Text = UIText.Roll.IdleResult
 resultLabel.TextSize = 14
-resultLabel.TextColor3 = Color3.fromRGB(255, 240, 170)
+resultLabel.TextColor3 = UITheme.Colors.AccentGold
 resultLabel.TextXAlignment = Enum.TextXAlignment.Left
 resultLabel.Parent = frame
 
@@ -176,18 +180,20 @@ rollResult.OnClientEvent:Connect(function(payload)
 		return
 	end
 	if not payload.success then
-		resultLabel.TextColor3 = Color3.fromRGB(255, 120, 120)
-		resultLabel.Text = string.format("Roll failed: %s", tostring(payload.err or "unknown_error"))
+		resultLabel.TextColor3 = UITheme.Colors.Danger
+		resultLabel.Text = string.format("Roll failed: %s", UIText.FriendlyError(payload.err or "unknown_error"))
 		return
 	end
 
 	local result = payload.result or {}
-	local rarity = tostring(result.rarity or "Unknown")
+	local rarity = tostring(result.rarity or UIText.Common.Unknown)
 	local itemId = tostring(result.item_id or "unknown_item")
-	local lane = tostring(result.lane or "Unknown")
+	local lane = tostring(result.lane or UIText.Common.Unknown)
+	local presentation = RarityPresentation.Get(rarity)
+	local display = lane == "Aura" and AuraDisplayCatalog.GetDisplay(itemId) or WeaponDisplayCatalog.GetDisplay(itemId)
 
-	resultLabel.TextColor3 = Color3.fromRGB(255, 240, 170)
-	resultLabel.Text = string.format("You rolled %s (%s)\n%s", rarity, lane, itemId)
+	resultLabel.TextColor3 = presentation.color
+	resultLabel.Text = string.format("You rolled %s %s\n%s", presentation.label, lane, display.name)
 	local baseSize = resultLabel.TextSize
 	resultLabel.TextSize = baseSize + 2
 	TweenService:Create(resultLabel, TweenInfo.new(0.2), { TextSize = baseSize }):Play()

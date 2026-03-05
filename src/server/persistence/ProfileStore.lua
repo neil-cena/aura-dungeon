@@ -379,7 +379,7 @@ function ProfileStore.GetBackendInfo()
 	}
 end
 
-if DATASTORE_ENABLED then
+if DATASTORE_ENABLED and RunService:IsServer() then
 	task.spawn(function()
 		while true do
 			task.wait(AUTOSAVE_INTERVAL_SECONDS)
@@ -391,16 +391,23 @@ if DATASTORE_ENABLED then
 	end)
 end
 
-Players.PlayerRemoving:Connect(function(player)
-	local playerId = tostring(player.UserId)
-	ProfileStore.FlushProfile(playerId, true)
-	local key = profileKey(playerId)
-	profileCache[key] = nil
-	dirtyKeys[key] = nil
-end)
+if RunService:IsServer() then
+	Players.PlayerRemoving:Connect(function(player)
+		local playerId = tostring(player.UserId)
+		ProfileStore.FlushProfile(playerId, true)
+		local key = profileKey(playerId)
+		profileCache[key] = nil
+		dirtyKeys[key] = nil
+	end)
 
-game:BindToClose(function()
-	ProfileStore.FlushAll(true)
-end)
+	local okBind, bindErr = pcall(function()
+		game:BindToClose(function()
+			ProfileStore.FlushAll(true)
+		end)
+	end)
+	if not okBind then
+		warn("[Aura Dungeon] BindToClose hook skipped in this context:", tostring(bindErr))
+	end
+end
 
 return ProfileStore

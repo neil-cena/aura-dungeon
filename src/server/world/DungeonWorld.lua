@@ -4,11 +4,22 @@
 ]]
 
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DungeonWorld = {}
+local shared = ReplicatedStorage:WaitForChild("shared")
+local AssetCatalog = require(shared.config.AssetCatalog)
+local VisualFactory = require(script.Parent.VisualFactory)
 
 local ROOT_NAME = "AuraDungeons"
 local ARENA_SIZE = Vector3.new(100, 2, 100)
+
+local function removeIfPresent(parent, name)
+	local item = parent and parent:FindFirstChild(name)
+	if item then
+		item:Destroy()
+	end
+end
 
 local function getRoot()
 	local root = Workspace:FindFirstChild(ROOT_NAME)
@@ -41,8 +52,8 @@ local function createWall(parent, name, size, cframe)
 	end
 	wall.Size = size
 	wall.CFrame = cframe
-	wall.Material = Enum.Material.Slate
-	wall.Color = Color3.fromRGB(42, 46, 58)
+	wall.Material = (AssetCatalog.Dungeon and AssetCatalog.Dungeon.WallMaterial) or Enum.Material.Slate
+	wall.Color = (AssetCatalog.Dungeon and AssetCatalog.Dungeon.WallColor) or Color3.fromRGB(42, 46, 58)
 	return wall
 end
 
@@ -67,8 +78,8 @@ function DungeonWorld.EnsureArena(playerId)
 	end
 	floor.Size = ARENA_SIZE
 	floor.CFrame = CFrame.new(basePos + Vector3.new(0, 0, 0))
-	floor.Color = Color3.fromRGB(32, 36, 48)
-	floor.Material = Enum.Material.Basalt
+	floor.Color = (AssetCatalog.Dungeon and AssetCatalog.Dungeon.FloorColor) or Color3.fromRGB(32, 36, 48)
+	floor.Material = (AssetCatalog.Dungeon and AssetCatalog.Dungeon.FloorMaterial) or Enum.Material.Basalt
 
 	local wallHeight = 20
 	local wallThickness = 3
@@ -79,6 +90,25 @@ function DungeonWorld.EnsureArena(playerId)
 	createWall(arena, "WallSouth", Vector3.new(ARENA_SIZE.X, wallHeight, wallThickness), CFrame.new(basePos + Vector3.new(0, wallHeight / 2, halfZ)))
 	createWall(arena, "WallEast", Vector3.new(wallThickness, wallHeight, ARENA_SIZE.Z), CFrame.new(basePos + Vector3.new(halfX, wallHeight / 2, 0)))
 	createWall(arena, "WallWest", Vector3.new(wallThickness, wallHeight, ARENA_SIZE.Z), CFrame.new(basePos + Vector3.new(-halfX, wallHeight / 2, 0)))
+
+	for i = 1, 4 do
+		local corner = arena:FindFirstChild("AccentPillar_" .. tostring(i))
+		if not corner then
+			corner = Instance.new("Part")
+			corner.Name = "AccentPillar_" .. tostring(i)
+			corner.Anchored = true
+			corner.CanCollide = true
+			corner.Material = Enum.Material.Neon
+			corner.Parent = arena
+		end
+		corner.Size = Vector3.new(3, 16, 3)
+		corner.Color = (AssetCatalog.Dungeon and AssetCatalog.Dungeon.AccentColor) or Color3.fromRGB(106, 188, 255)
+	end
+	local y = 8
+	arena.AccentPillar_1.CFrame = CFrame.new(basePos + Vector3.new(halfX - 6, y, halfZ - 6))
+	arena.AccentPillar_2.CFrame = CFrame.new(basePos + Vector3.new(-halfX + 6, y, halfZ - 6))
+	arena.AccentPillar_3.CFrame = CFrame.new(basePos + Vector3.new(halfX - 6, y, -halfZ + 6))
+	arena.AccentPillar_4.CFrame = CFrame.new(basePos + Vector3.new(-halfX + 6, y, -halfZ + 6))
 
 	local spawnPart = arena:FindFirstChild("Spawn")
 	if not spawnPart then
@@ -103,6 +133,11 @@ function DungeonWorld.EnsureArena(playerId)
 	end
 	bossPart.Size = Vector3.new(8, 1, 8)
 	bossPart.CFrame = CFrame.new(basePos + Vector3.new(0, 3, -30))
+
+	removeIfPresent(arena, "FloorSetArt")
+	removeIfPresent(arena, "WallSetArt")
+	VisualFactory.TrySpawnModel((AssetCatalog.Models.Dungeon or {}).FloorSet, arena, floor.CFrame, "FloorSetArt")
+	VisualFactory.TrySpawnModel((AssetCatalog.Models.Dungeon or {}).WallSet, arena, CFrame.new(basePos + Vector3.new(0, 0, 0)), "WallSetArt")
 
 	return {
 		folder = arena,

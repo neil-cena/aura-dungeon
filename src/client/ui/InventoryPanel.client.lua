@@ -13,6 +13,12 @@ end
 
 local inventoryRemotes = ReplicatedStorage:WaitForChild("InventoryRemotes")
 local interactionRemotes = ReplicatedStorage:WaitForChild("InteractionRemotes")
+local shared = ReplicatedStorage:WaitForChild("shared")
+local UITheme = require(shared.config.UITheme)
+local RarityPresentation = require(shared.config.RarityPresentation)
+local UIText = require(shared.config.UIText)
+local AuraDisplayCatalog = require(shared.config.AuraDisplayCatalog)
+local WeaponDisplayCatalog = require(shared.config.WeaponDisplayCatalog)
 
 local getInventory = inventoryRemotes:FindFirstChild("GetInventory")
 local requestEquip = inventoryRemotes:FindFirstChild("RequestEquipItem")
@@ -31,8 +37,7 @@ local frame = Instance.new("Frame")
 frame.Name = "Panel"
 frame.Size = UDim2.new(0.45, 0, 0.5, 0)
 frame.Position = UDim2.new(0.03, 0, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(28, 34, 46)
-frame.BorderSizePixel = 0
+UITheme.ApplyPanel(frame, false)
 frame.Visible = false
 frame.Parent = gui
 
@@ -40,8 +45,8 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -12, 0, 26)
 title.Position = UDim2.new(0, 6, 0, 6)
 title.BackgroundTransparency = 1
-title.Text = "Inventory"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Text = UIText.Inventory.Title
+UITheme.ApplyText(title, true)
 title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = frame
@@ -60,7 +65,7 @@ equippedLabel.Size = UDim2.new(1, -12, 0, 20)
 equippedLabel.Position = UDim2.new(0, 6, 0, 36)
 equippedLabel.BackgroundTransparency = 1
 equippedLabel.Text = "Equipped Aura: - | Weapon: -"
-equippedLabel.TextColor3 = Color3.fromRGB(204, 216, 255)
+equippedLabel.TextColor3 = UITheme.Colors.TextSecondary
 equippedLabel.TextSize = 13
 equippedLabel.TextXAlignment = Enum.TextXAlignment.Left
 equippedLabel.Parent = frame
@@ -70,25 +75,13 @@ content.Size = UDim2.new(1, -12, 1, -66)
 content.Position = UDim2.new(0, 6, 0, 60)
 content.CanvasSize = UDim2.new(0, 0, 0, 0)
 content.ScrollBarThickness = 8
-content.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+content.BackgroundColor3 = UITheme.Colors.PanelDeep
 content.BorderSizePixel = 0
 content.Parent = frame
 
 local uiList = Instance.new("UIListLayout")
 uiList.Padding = UDim.new(0, 6)
 uiList.Parent = content
-
-local function rarityColor(itemId)
-	local id = string.lower(itemId or "")
-	if id:find("_legendary_") then
-		return Color3.fromRGB(255, 201, 93)
-	elseif id:find("_epic_") then
-		return Color3.fromRGB(193, 120, 255)
-	elseif id:find("_rare_") then
-		return Color3.fromRGB(114, 172, 255)
-	end
-	return Color3.fromRGB(178, 178, 178)
-end
 
 local function clearRows()
 	for _, child in ipairs(content:GetChildren()) do
@@ -99,16 +92,19 @@ local function clearRows()
 end
 
 local function addRow(slot, itemId, isEquipped)
+	local rarity = RarityPresentation.Get(itemId)
+	local display = slot == "aura" and AuraDisplayCatalog.GetDisplay(itemId) or WeaponDisplayCatalog.GetDisplay(itemId)
+
 	local row = Instance.new("Frame")
 	row.Size = UDim2.new(1, -6, 0, 36)
-	row.BackgroundColor3 = Color3.fromRGB(34, 40, 56)
+	row.BackgroundColor3 = UITheme.Colors.PanelSoft
 	row.BorderSizePixel = 0
 	row.Parent = content
 
 	local marker = Instance.new("Frame")
 	marker.Size = UDim2.new(0, 6, 1, 0)
 	marker.Position = UDim2.new(0, 0, 0, 0)
-	marker.BackgroundColor3 = rarityColor(itemId)
+	marker.BackgroundColor3 = rarity.color
 	marker.BorderSizePixel = 0
 	marker.Parent = row
 
@@ -118,14 +114,14 @@ local function addRow(slot, itemId, isEquipped)
 	label.BackgroundTransparency = 1
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextSize = 12
-	label.TextColor3 = Color3.fromRGB(240, 244, 255)
-	label.Text = string.format("%s: %s", slot, itemId)
+	label.TextColor3 = UITheme.Colors.TextPrimary
+	label.Text = string.format("%s: %s [%s]", slot, display.name, rarity.label)
 	label.Parent = row
 
 	local equipBtn = Instance.new("TextButton")
 	equipBtn.Size = UDim2.new(0.27, 0, 0.72, 0)
 	equipBtn.Position = UDim2.new(0.71, 0, 0.14, 0)
-	equipBtn.BackgroundColor3 = isEquipped and Color3.fromRGB(68, 144, 89) or Color3.fromRGB(80, 104, 155)
+	equipBtn.BackgroundColor3 = isEquipped and UITheme.Colors.Success or UITheme.Colors.AccentBlue
 	equipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	equipBtn.TextSize = 12
 	equipBtn.Text = isEquipped and "Equipped" or "Equip"
@@ -144,8 +140,8 @@ local function render(inventory)
 	local equipped = inventory.equipped or {}
 	equippedLabel.Text = string.format(
 		"Equipped Aura: %s | Weapon: %s",
-		tostring(equipped.aura or "-"),
-		tostring(equipped.weapon or "-")
+		tostring((equipped.aura and AuraDisplayCatalog.GetDisplay(equipped.aura).name) or "-"),
+		tostring((equipped.weapon and WeaponDisplayCatalog.GetDisplay(equipped.weapon).name) or "-")
 	)
 
 	for _, item in ipairs(inventory.auras or {}) do
