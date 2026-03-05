@@ -183,9 +183,21 @@ function HubBuilder.Build()
 	)
 
 	removeIfPresent(folder, "HubDecor")
+	removeIfPresent(folder, "GroundArt")
 	removeIfPresent(folder, "RollStationArt")
 	removeIfPresent(folder, "InventoryPedestalArt")
 	removeIfPresent(folder, "RiftPortalArt")
+	local groundArt = VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).Ground, folder, hubGround.CFrame, "GroundArt")
+	if groundArt then
+		-- Fully replace primitive floor when custom ground asset is provided.
+		hubGround.Transparency = 1
+		hubGround.CanCollide = false
+		hubGround.CanTouch = false
+	else
+		hubGround.Transparency = 0
+		hubGround.CanCollide = true
+		hubGround.CanTouch = true
+	end
 	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).DecorSet, folder, CFrame.new(0, 0, 0), "HubDecor")
 	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).RollStation, folder, rollStation.CFrame, "RollStationArt")
 	VisualFactory.TrySpawnModel((AssetCatalog.Models.Hub or {}).InventoryPedestal, folder, inventoryPedestal.CFrame, "InventoryPedestalArt")
